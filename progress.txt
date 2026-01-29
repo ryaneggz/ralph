@@ -427,3 +427,19 @@
   - IacGenerateSection component shows tabbed file viewer with syntax-highlighted code
   - Template generators receive projectName and awsRegion as options
 ---
+
+## 2026-01-29 - US-21
+- Replaced plain `<pre>` code viewer with Monaco editor in read-only mode
+- Added file tree sidebar for multi-file navigation (replaces tab strip)
+- Monaco editor provides TypeScript syntax highlighting, line numbers, word wrap
+- Language auto-detected from file extension (.ts, .js, .json, .yaml)
+- Files changed:
+  - src/components/iac-generate-section.tsx (updated - Monaco editor + file tree sidebar)
+  - ralph-orchestrator/package.json (updated - added @monaco-editor/react)
+  - prd.json (updated - US-21 passes: true)
+- **Learnings for future iterations:**
+  - @monaco-editor/react is the React wrapper for Monaco; import as `Editor` from `@monaco-editor/react`
+  - Use `readOnly: true` and `domReadOnly: true` options together for truly read-only Monaco
+  - Monaco needs explicit height (not auto); use container with fixed height
+  - File tree sidebar pattern: left panel (w-48) + flex-1 editor area
+---

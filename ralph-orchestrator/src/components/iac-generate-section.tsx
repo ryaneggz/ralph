@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import Editor from "@monaco-editor/react";
 
 interface IacFile {
   path: string;
@@ -12,6 +13,14 @@ interface IacGenerateSectionProps {
   projectId: string;
   iacTemplate: string | null;
   initialFiles: IacFile[];
+}
+
+function getLanguage(path: string): string {
+  if (path.endsWith(".ts")) return "typescript";
+  if (path.endsWith(".js")) return "javascript";
+  if (path.endsWith(".json")) return "json";
+  if (path.endsWith(".yaml") || path.endsWith(".yml")) return "yaml";
+  return "plaintext";
 }
 
 export function IacGenerateSection({
@@ -79,27 +88,46 @@ export function IacGenerateSection({
       )}
 
       {files.length > 0 && (
-        <div className="border rounded-md overflow-hidden">
-          <div className="flex border-b bg-muted/50">
+        <div className="border rounded-md overflow-hidden flex" style={{ height: 500 }}>
+          {/* File tree sidebar */}
+          <div className="w-48 shrink-0 border-r bg-muted/50 overflow-y-auto">
+            <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Files
+            </div>
             {files.map((f) => (
               <button
                 key={f.path}
                 onClick={() => setSelectedFile(f.path)}
-                className={`px-3 py-2 text-xs font-mono transition-colors ${
+                className={`w-full text-left px-3 py-1.5 text-xs font-mono transition-colors block ${
                   selectedFile === f.path
-                    ? "bg-background text-foreground border-b-2 border-primary"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-primary/10 text-primary font-semibold"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
               >
                 {f.path}
               </button>
             ))}
           </div>
-          {activeFile && (
-            <pre className="p-4 text-xs font-mono overflow-auto max-h-[500px] bg-background">
-              <code>{activeFile.content}</code>
-            </pre>
-          )}
+          {/* Monaco editor */}
+          <div className="flex-1 min-w-0">
+            {activeFile && (
+              <Editor
+                height="100%"
+                language={getLanguage(activeFile.path)}
+                value={activeFile.content}
+                theme="vs-dark"
+                options={{
+                  readOnly: true,
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                  fontSize: 13,
+                  lineNumbers: "on",
+                  wordWrap: "on",
+                  domReadOnly: true,
+                }}
+              />
+            )}
+          </div>
         </div>
       )}
     </div>
