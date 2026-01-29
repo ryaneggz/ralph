@@ -46,6 +46,18 @@ export async function POST(
   }
 
   project.iacFiles = files;
+
+  // Add version history entry
+  const crypto = await import("crypto");
+  const versionEntry = {
+    versionId: crypto.randomUUID(),
+    label: "generated" as const,
+    files,
+    createdAt: new Date(),
+  };
+  if (!project.iacVersions) project.iacVersions = [];
+  project.iacVersions.push(versionEntry);
+
   await project.save();
 
   return NextResponse.json({ files });

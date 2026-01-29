@@ -45,6 +45,18 @@ export async function PUT(
   project.iacFiles = body.files;
   project.iacDraftFiles = undefined;
   project.iacDraftUpdatedAt = undefined;
+
+  // Add version history entry
+  const crypto = await import("crypto");
+  const versionEntry = {
+    versionId: crypto.randomUUID(),
+    label: "applied" as const,
+    files: body.files,
+    createdAt: new Date(),
+  };
+  if (!project.iacVersions) project.iacVersions = [];
+  project.iacVersions.push(versionEntry);
+
   await project.save();
 
   return NextResponse.json({ files: project.iacFiles });

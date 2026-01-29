@@ -485,3 +485,32 @@
   - Cancel edit reverts to initialFiles (applied), not draft files
   - Draft badge shows timestamp via toLocaleTimeString() for quick reference
 ---
+
+## 2026-01-29 - US-24
+- Implemented IaC version history with version list, inline diff view, and restore
+- Added IIacVersion interface and iacVersions array to Project model
+- Version entries created on generate (label: "generated"), save (label: "applied"), and restore
+- Created GET /api/projects/[id]/iac-versions (list, newest first, without file contents)
+- Created GET /api/projects/[id]/iac-versions/[versionId] (full version with file contents)
+- Created POST /api/projects/[id]/iac-versions (restore a version by versionId)
+- Built IacVersionHistory component with collapsible version list, radio-select diff, and restore button
+- Inline diff uses LCS algorithm for line-by-line comparison with added/removed highlighting
+- File selector dropdown for diffing multi-file versions
+- IacVersionHistoryWrapper handles router.refresh() on restore
+- Files changed:
+  - src/lib/models/project.ts (updated - added IIacVersion, iacVersions field)
+  - src/app/api/projects/[id]/iac-versions/route.ts (new - GET list, POST restore)
+  - src/app/api/projects/[id]/iac-versions/[versionId]/route.ts (new - GET detail)
+  - src/app/api/projects/[id]/iac-files/route.ts (updated - creates "applied" version on save)
+  - src/app/api/projects/[id]/iac-generate/route.ts (updated - creates "generated" version on generate)
+  - src/components/iac-version-history.tsx (new - version history UI)
+  - src/components/iac-version-history-wrapper.tsx (new - client wrapper with router.refresh)
+  - src/app/projects/[id]/page.tsx (updated - added version history component)
+  - prd.json (updated - US-24 passes: true)
+- **Learnings for future iterations:**
+  - Version history stored as iacVersions array in Project document — each entry has versionId (UUID), label, files, createdAt
+  - API list endpoint omits file contents for performance — use detail endpoint for full data
+  - LCS-based diff works for reasonable file sizes; for very large files consider a streaming diff library
+  - Restore creates a new "applied" version entry to maintain full audit trail
+  - IacVersionHistoryWrapper pattern separates server-aware routing from pure UI component
+---

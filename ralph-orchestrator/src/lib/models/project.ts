@@ -24,6 +24,13 @@ export interface IIacFile {
   content: string;
 }
 
+export interface IIacVersion {
+  versionId: string;
+  label: "draft" | "applied" | "generated";
+  files: IIacFile[];
+  createdAt: Date;
+}
+
 export interface IAwsAuth {
   authType: "role" | "access-keys";
   roleArn?: string;
@@ -46,6 +53,7 @@ export interface IProject extends Document {
   iacFiles?: IIacFile[];
   iacDraftFiles?: IIacFile[];
   iacDraftUpdatedAt?: Date;
+  iacVersions?: IIacVersion[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -110,6 +118,20 @@ const ProjectSchema = new Schema<IProject>(
       default: undefined,
     },
     iacDraftUpdatedAt: { type: Date },
+    iacVersions: {
+      type: [
+        {
+          versionId: { type: String, required: true },
+          label: { type: String, enum: ["draft", "applied", "generated"], required: true },
+          files: {
+            type: [{ path: { type: String, required: true }, content: { type: String, required: true } }],
+            required: true,
+          },
+          createdAt: { type: Date, required: true, default: Date.now },
+        },
+      ],
+      default: [],
+    },
   },
   { timestamps: true }
 );
