@@ -30,6 +30,8 @@ export function ActiveAgentIndicator({ projectId }: { projectId: string }) {
   const [session, setSession] = useState<AgentSession | null>(null);
   const [uptimeMs, setUptimeMs] = useState(0);
   const [scaledDown, setScaledDown] = useState<{ reason: string } | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [stopping, setStopping] = useState(false);
 
   const fetchSession = useCallback(async () => {
     try {
@@ -39,7 +41,6 @@ export function ActiveAgentIndicator({ projectId }: { projectId: string }) {
         if (data.scaledDown) {
           setScaledDown({ reason: data.reason ?? "Idle timeout exceeded" });
           setSession(null);
-          // Clear scaled-down notice after 10 seconds
           setTimeout(() => setScaledDown(null), 10000);
         } else {
           setSession(data);
@@ -68,6 +69,25 @@ export function ActiveAgentIndicator({ projectId }: { projectId: string }) {
     }, 1000);
     return () => clearInterval(tick);
   }, [session?.active]);
+
+  const handleStop = async () => {
+    setStopping(true);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/agent-session/stop`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        setSession(null);
+        setConfirming(false);
+        setScaledDown({ reason: "Manually stopped by user" });
+        setTimeout(() => setScaledDown(null), 10000);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setStopping(false);
+    }
+  };
 
   if (scaledDown) {
     return (
@@ -100,6 +120,31 @@ export function ActiveAgentIndicator({ projectId }: { projectId: string }) {
       <span className="text-green-500 dark:text-green-500 tabular-nums">
         {formatUptime(uptimeMs)}
       </span>
+      {confirming ? (
+        <span className="flex items-center gap-1 ml-2">
+          <button
+            onClick={handleStop}
+            disabled={stopping}
+            className="rounded bg-red-600 px-2 py-0.5 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
+          >
+            {stopping ? "Stopping..." : "Confirm Stop"}
+          </button>
+          <button
+            onClick={() => setConfirming(false)}
+            disabled={stopping}
+            className="rounded border border-gray-300 px-2 py-0.5 text-xs font-medium hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-800 disabled:opacity-50"
+          >
+            Cancel
+          </button>
+        </span>
+      ) : (
+        <button
+          onClick={() => setConfirming(true)}
+          className="ml-2 rounded border border-red-300 bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 hover:bg-red-100 dark:border-red-800 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900"
+        >
+          Stop Agent
+        </button>
+      )}
     </div>
   );
 }

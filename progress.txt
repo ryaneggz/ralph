@@ -855,3 +855,21 @@
   - IdleTimeoutForm uses range slider with step=5 for intuitive selection
   - Settings page section order: ... > IaC Template > Idle Timeout > Danger Zone
 ---
+
+## 2026-01-29 - US-42
+- Implemented manual stop agent session functionality
+- Created POST /api/projects/[id]/agent-session/stop endpoint that cancels active runs
+- Added "Stop Agent" button to ActiveAgentIndicator with inline confirmation dialog
+- On stop: run status transitions to "canceled" with log entry and failureReason
+- After stopping, shows "Scaled Down" notice with "Manually stopped by user" reason
+- ECS terminate signal stubbed — runs canceled in DB immediately
+- Files changed:
+  - src/app/api/projects/[id]/agent-session/stop/route.ts (new)
+  - src/components/active-agent-indicator.tsx (updated - added Stop Agent button with confirmation)
+  - prd.json (updated - US-42 passes: true)
+- **Learnings for future iterations:**
+  - Stop endpoint is a separate route at /agent-session/stop (POST) — keeps concerns separated from GET session status
+  - Inline confirmation pattern reused from other destructive actions in the codebase
+  - After stopping, scaledDown state displayed for 10s then auto-clears (same pattern as idle timeout)
+  - ECS task termination is TODO — currently only DB-level cancellation
+---
