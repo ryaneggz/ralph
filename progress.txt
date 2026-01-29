@@ -228,5 +228,17 @@
   - prd.json (updated - US-09 passes: true)
 - **Learnings for future iterations:**
   - Adding a new provider key is trivial: add another ProviderKeyForm instance in settings page + add format validation in provider-key-form.tsx
-  - Provider key prefix conventions: claude-code → sk-ant-, codeex → codeex-
+  - Provider key prefix conventions: claude-code → sk-ant-, codeex → codeex-, opencode → opencode-
+---
+
+## 2026-01-29 - US-10
+- Added OpenCode provider key form to project settings page
+- Added OpenCode-specific key format validation (opencode- prefix) in ProviderKeyForm
+- Files changed:
+  - src/app/projects/[id]/settings/page.tsx (updated - added OpenCode ProviderKeyForm)
+  - src/components/provider-key-form.tsx (updated - added opencode format validation)
+  - prd.json (updated - US-10 passes: true)
+- **Learnings for future iterations:**
+  - Identical pattern to US-09: add ProviderKeyForm instance + format validation
+  - All three providers now configured: claude-code, codeex, opencode
 ---

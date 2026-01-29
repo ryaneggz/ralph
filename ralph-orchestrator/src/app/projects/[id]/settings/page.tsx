@@ -99,6 +99,13 @@ export default async function ProjectSettingsPage({
               placeholder="codeex-..."
               initialData={providerKeysMap.get("codeex") ?? null}
             />
+            <ProviderKeyForm
+              projectId={id}
+              provider="opencode"
+              label="OpenCode"
+              placeholder="opencode-..."
+              initialData={providerKeysMap.get("opencode") ?? null}
+            />
           </div>
         </section>
 

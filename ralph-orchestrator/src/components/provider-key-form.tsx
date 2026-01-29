@@ -84,6 +84,11 @@ export function ProviderKeyForm({
         setTesting(false);
         return;
       }
+      if (provider === "opencode" && !keyToTest.startsWith("opencode-")) {
+        setMessage({ type: "error", text: "Invalid key format. OpenCode keys start with opencode-" });
+        setTesting(false);
+        return;
+      }
       setMessage({ type: "success", text: "Key format looks valid. Full validation will occur on first use." });
     } else if (configured) {
       setMessage({ type: "success", text: "Key is configured. Full validation will occur on first use." });
