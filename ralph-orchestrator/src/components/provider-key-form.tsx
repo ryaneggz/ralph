@@ -31,6 +31,7 @@ export function ProviderKeyForm({
   const [maskedValue, setMaskedValue] = useState(initialData?.maskedValue ?? "");
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [rotating, setRotating] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   async function handleSave() {
@@ -55,7 +56,8 @@ export function ProviderKeyForm({
       setConfigured(true);
       setMaskedValue(data.maskedValue);
       setApiKey("");
-      setMessage({ type: "success", text: "API key saved successfully" });
+      setRotating(false);
+      setMessage({ type: "success", text: rotating ? "API key rotated successfully" : "API key saved successfully" });
     } catch {
       setMessage({ type: "error", text: "Failed to save key" });
     } finally {
@@ -118,26 +120,55 @@ export function ProviderKeyForm({
         </p>
       )}
 
-      <div className="flex gap-2">
-        <Input
-          type="password"
-          placeholder={configured ? "Enter new key to replace" : placeholder}
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-          className="flex-1"
-        />
-        <Button onClick={handleSave} disabled={saving || !apiKey.trim()} size="sm">
-          {saving ? "Saving..." : configured ? "Replace" : "Save"}
-        </Button>
-        <Button
-          onClick={handleTestConnection}
-          disabled={testing || (!apiKey.trim() && !configured)}
-          variant="outline"
-          size="sm"
-        >
-          {testing ? "Testing..." : "Test"}
-        </Button>
-      </div>
+      {configured && !rotating ? (
+        <div className="flex gap-2">
+          <Button
+            onClick={() => { setRotating(true); setMessage(null); }}
+            variant="outline"
+            size="sm"
+          >
+            Rotate
+          </Button>
+          <Button
+            onClick={handleTestConnection}
+            disabled={testing}
+            variant="outline"
+            size="sm"
+          >
+            {testing ? "Testing..." : "Test"}
+          </Button>
+        </div>
+      ) : (
+        <div className="flex gap-2">
+          <Input
+            type="password"
+            placeholder={configured ? "Enter new key to rotate" : placeholder}
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            className="flex-1"
+          />
+          <Button onClick={handleSave} disabled={saving || !apiKey.trim()} size="sm">
+            {saving ? "Saving..." : configured ? "Rotate Key" : "Save"}
+          </Button>
+          <Button
+            onClick={handleTestConnection}
+            disabled={testing || !apiKey.trim()}
+            variant="outline"
+            size="sm"
+          >
+            {testing ? "Testing..." : "Test"}
+          </Button>
+          {configured && (
+            <Button
+              onClick={() => { setRotating(false); setApiKey(""); setMessage(null); }}
+              variant="ghost"
+              size="sm"
+            >
+              Cancel
+            </Button>
+          )}
+        </div>
+      )}
 
       {message && (
         <p className={`text-sm ${message.type === "success" ? "text-green-600" : "text-destructive"}`}>

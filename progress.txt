@@ -255,3 +255,16 @@
   - Provider status overview on workspace page complements the editable forms on settings page
   - project.providerKeys array can be accessed directly in server components without API call
 ---
+
+## 2026-01-29 - US-12
+- Added explicit "Rotate" button to ProviderKeyForm for configured providers
+- When configured: shows Rotate + Test buttons; clicking Rotate reveals input field with "Rotate Key" save button and Cancel
+- When not configured: shows input field with Save button (unchanged behavior)
+- Rotation uses existing PUT endpoint which already supports replacing keys
+- Files changed:
+  - src/components/provider-key-form.tsx (updated - added rotating state, Rotate button UX)
+  - prd.json (updated - US-12 passes: true)
+- **Learnings for future iterations:**
+  - Rotate is functionally identical to Replace — same PUT endpoint, just different UX flow
+  - The rotating state hides the input until user explicitly clicks Rotate, reducing accidental overwrites
+---
