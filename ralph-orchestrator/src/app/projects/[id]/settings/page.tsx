@@ -10,6 +10,7 @@ import { ProjectDeleteSection } from "@/components/project-delete-section";
 import { ProviderKeyForm } from "@/components/provider-key-form";
 import { AwsRegionForm } from "@/components/aws-region-form";
 import { AwsAuthForm } from "@/components/aws-auth-form";
+import { IacTemplateSelector } from "@/components/iac-template-selector";
 import Link from "next/link";
 
 export default async function ProjectSettingsPage({
@@ -142,6 +143,14 @@ export default async function ProjectSettingsPage({
                   }
                 : { configured: false }
             }
+          />
+        </section>
+
+        <section className="mt-8">
+          <h3 className="text-lg font-semibold mb-4">IaC Template</h3>
+          <IacTemplateSelector
+            projectId={id}
+            initialTemplate={project.iacTemplate ?? null}
           />
         </section>
 

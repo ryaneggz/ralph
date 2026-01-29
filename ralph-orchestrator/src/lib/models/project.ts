@@ -37,6 +37,7 @@ export interface IProject extends Document {
   providerKeys?: IProviderKey[];
   awsRegion?: string;
   awsAuth?: IAwsAuth;
+  iacTemplate?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -91,6 +92,7 @@ const ProjectSchema = new Schema<IProject>(
     providerKeys: { type: [ProviderKeySchema], default: [] },
     awsRegion: { type: String, default: "us-east-1" },
     awsAuth: { type: AwsAuthSchema },
+    iacTemplate: { type: String },
   },
   { timestamps: true }
 );

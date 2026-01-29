@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Project } from "@/lib/models/project";
 import { AWS_REGIONS } from "@/lib/aws-regions";
+import { IAC_TEMPLATE_IDS } from "@/lib/iac-templates";
 
 export async function PATCH(
   request: NextRequest,
@@ -15,7 +16,7 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await request.json();
-  const { name, awsRegion } = body;
+  const { name, awsRegion, iacTemplate } = body;
 
   const update: Record<string, string> = {};
 
@@ -37,6 +38,13 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid AWS region" }, { status: 400 });
     }
     update.awsRegion = awsRegion;
+  }
+
+  if (iacTemplate !== undefined) {
+    if (typeof iacTemplate !== "string" || !IAC_TEMPLATE_IDS.includes(iacTemplate)) {
+      return NextResponse.json({ error: "Invalid IaC template" }, { status: 400 });
+    }
+    update.iacTemplate = iacTemplate;
   }
 
   if (Object.keys(update).length === 0) {

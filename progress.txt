@@ -25,6 +25,7 @@
 - Env vars stored with maskedValue in DB to avoid decrypting for display
 - API sub-resources: /api/projects/[id]/env-vars for env var CRUD
 - API sub-resources: /api/projects/[id]/provider-keys for provider key CRUD (PUT to add/replace, DELETE to remove)
+- IaC templates defined in src/lib/iac-templates.ts — IAC_TEMPLATE_IDS for validation, IAC_TEMPLATES for display
 - ProviderKeyForm component is reusable for all providers (claude-code, codeex, opencode)
 - Project-level mutations (rename, delete, config) use /api/projects/[id] route with PATCH/DELETE methods
 - AWS regions list shared via src/lib/aws-regions.ts — use for any AWS region dropdowns/validation
@@ -383,4 +384,24 @@
   - Edit toggle pattern: `editing` state starts false when configured, true when not
   - Post-save validation: save first, then test connection, report combined result
   - Cancel edit resets to read-only without API call
+---
+
+## 2026-01-29 - US-19
+- Implemented IaC template selector with three options: Fargate, Lambda, EC2 Spot
+- Created src/lib/iac-templates.ts with template data (id, name, description, estimated cost range)
+- Added iacTemplate field to Project model
+- Extended PATCH /api/projects/[id] to accept and validate iacTemplate
+- Created IacTemplateSelector client component with card-style radio selection
+- Added "IaC Template" section to project settings page (between AWS Authentication and Danger Zone)
+- Files changed:
+  - src/lib/iac-templates.ts (new - IaC template definitions)
+  - src/lib/models/project.ts (updated - added iacTemplate field)
+  - src/app/api/projects/[id]/route.ts (updated - PATCH accepts iacTemplate)
+  - src/components/iac-template-selector.tsx (new - template selector component)
+  - src/app/projects/[id]/settings/page.tsx (updated - added IaC Template section)
+  - prd.json (updated - US-19 passes: true)
+- **Learnings for future iterations:**
+  - IaC templates defined in src/lib/iac-templates.ts — add new templates there
+  - IAC_TEMPLATE_IDS exported for runtime validation in API routes
+  - Settings page section order: Project Name > Repository > Provider API Keys > Env Vars > AWS Configuration > AWS Authentication > IaC Template > Danger Zone
 ---
