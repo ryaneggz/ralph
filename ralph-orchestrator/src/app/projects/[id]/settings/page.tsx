@@ -156,6 +156,19 @@ export default async function ProjectSettingsPage({
         </section>
 
         <section className="mt-8">
+          <h3 className="text-lg font-semibold mb-4">Audit Log</h3>
+          <p className="text-sm text-muted-foreground mb-2">
+            Review sensitive actions such as key changes, run starts, and configuration updates.
+          </p>
+          <Link
+            href={`/projects/${id}/audit-log`}
+            className="text-sm text-primary hover:underline"
+          >
+            View Audit Log →
+          </Link>
+        </section>
+
+        <section className="mt-8">
           <h3 className="text-lg font-semibold mb-4">Idle Timeout</h3>
           <IdleTimeoutForm
             projectId={id}

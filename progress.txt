@@ -886,3 +886,23 @@
 - **Learnings for future iterations:**
   - US-43 was fully covered by US-41 implementation — check for overlapping stories before starting work
 ---
+
+## 2026-01-29 - US-44
+- Implemented audit log page accessible from project settings
+- Created GET /api/projects/[id]/audit-log endpoint with filtering by action type and pagination (50 per page)
+- Built AuditLogViewer client component with filter chips, table view, and pagination controls
+- Created /projects/[id]/audit-log page with back navigation to settings
+- Added "Audit Log" section with link in project settings page (between IaC Template and Idle Timeout)
+- Each entry shows: timestamp, action badge (color-coded), resource type, and metadata details
+- Files changed:
+  - src/app/api/projects/[id]/audit-log/route.ts (new)
+  - src/components/audit-log-viewer.tsx (new)
+  - src/app/projects/[id]/audit-log/page.tsx (new)
+  - src/app/projects/[id]/settings/page.tsx (updated - added Audit Log section)
+  - prd.json (updated - US-44 passes: true)
+- **Learnings for future iterations:**
+  - Audit log API filters by resourceType field (maps to action type in UI)
+  - AuditLog model already existed from US-14 with logAudit() fire-and-forget helper
+  - Pagination uses skip/limit with countDocuments for total count
+  - Settings page section order: ... > IaC Template > Audit Log > Idle Timeout > Danger Zone
+---
