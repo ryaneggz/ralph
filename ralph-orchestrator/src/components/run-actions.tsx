@@ -11,6 +11,8 @@ interface RunSummary {
   provider: string;
   createdAt: string;
   statusHistory: { status: string; timestamp: string }[];
+  threadId?: string | null;
+  emailSubject?: string | null;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -263,6 +265,11 @@ export function RunActions({
                 <span className="text-xs text-muted-foreground">
                   {run.provider}
                 </span>
+                {run.threadId && (
+                  <span className="text-xs text-muted-foreground font-mono" title={run.threadId}>
+                    {run.threadId.slice(0, 20)}...
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 {(run.status === "queued" || run.status === "running") && (

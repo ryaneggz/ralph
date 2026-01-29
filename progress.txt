@@ -726,3 +726,27 @@
   - Run detail re-run uses window.location.href for full page navigation to new run
   - Run list re-run uses e.preventDefault() + e.stopPropagation() pattern from cancel button
 ---
+
+## 2026-01-29 - US-36
+- Implemented email-driven Ralph loop kickoff on run creation
+- Added threadId and emailSubject fields to Run model
+- Created src/lib/ralph-email.ts with sendRalphEmail() utility (stubbed — logs and generates thread ID)
+- Updated POST /api/projects/[id]/runs to generate email from PROMPT.md and send to agent endpoint
+- Thread ID and email subject stored on run record after successful send
+- Email failures logged as warnings but don't block run creation
+- Updated RunActions to show truncated thread ID in run list items
+- Updated RunDetailView to show email thread info section (subject + thread ID)
+- Files changed:
+  - src/lib/models/run.ts (updated - added threadId, emailSubject fields)
+  - src/lib/ralph-email.ts (new - email sending utility)
+  - src/app/api/projects/[id]/runs/route.ts (updated - sends email on run creation)
+  - src/components/run-actions.tsx (updated - shows thread ID in run list)
+  - src/components/run-detail-view.tsx (updated - shows email thread info section)
+  - prd.json (updated - US-36 passes: true)
+- **Learnings for future iterations:**
+  - sendRalphEmail() is stubbed with console.log — replace with SES/SendGrid in production
+  - Thread ID generated via crypto.randomUUID() (Node built-in, no uuid package needed)
+  - Email failure is non-fatal — run still creates, warning logged
+  - Email content comes from project.promptMd field (current PROMPT.md editor content)
+  - Thread info displayed in both run list (truncated) and run detail view (full)
+---

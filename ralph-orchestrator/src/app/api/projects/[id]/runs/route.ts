@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Project } from "@/lib/models/project";
 import { Run } from "@/lib/models/run";
+import { sendRalphEmail } from "@/lib/ralph-email";
 
 const VALID_TYPES = ["plan", "apply", "destroy"];
 const VALID_PROVIDERS = ["claude-code", "codeex", "opencode"];
@@ -57,8 +58,33 @@ export async function POST(
     statusHistory: [{ status: "queued", timestamp: now }],
   });
 
-  // TODO: Send message to SQS queue for async processing
-  // For now, the run stays in "queued" status until backend infrastructure is implemented
+  // Generate email from PROMPT.md and send to agent endpoint
+  const promptMd = project.promptMd ?? "";
+  try {
+    const emailResult = await sendRalphEmail({
+      promptMd,
+      projectName: project.name,
+      projectId: id,
+      runId: run._id.toString(),
+      runType: type,
+      provider,
+    });
+
+    // Store thread info on run record
+    run.threadId = emailResult.threadId;
+    run.emailSubject = emailResult.subject;
+    run.logs.push(
+      `[${new Date().toISOString()}] Email sent to agent — thread: ${emailResult.threadId}`
+    );
+    await run.save();
+  } catch (err) {
+    // Log email failure but don't fail the run creation
+    const errMsg = err instanceof Error ? err.message : "Unknown error";
+    run.logs.push(
+      `[${new Date().toISOString()}] Warning: Failed to send email to agent — ${errMsg}`
+    );
+    await run.save();
+  }
 
   return NextResponse.json(run, { status: 201 });
 }

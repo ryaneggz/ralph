@@ -11,6 +11,8 @@ export interface IRun extends Document {
   provider: string;
   logs: string[];
   statusHistory: { status: RunStatus; timestamp: Date }[];
+  threadId: string | null;
+  emailSubject: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -28,6 +30,8 @@ const RunSchema = new Schema<IRun>(
     },
     provider: { type: String, required: true },
     logs: { type: [String], default: [] },
+    threadId: { type: String, default: null },
+    emailSubject: { type: String, default: null },
     statusHistory: {
       type: [
         {

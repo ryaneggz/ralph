@@ -16,6 +16,8 @@ interface RunDetail {
   updatedAt: string;
   statusHistory: StatusHistoryEntry[];
   logs: string[];
+  threadId?: string | null;
+  emailSubject?: string | null;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -93,6 +95,8 @@ export function RunDetailView({
           updatedAt: data.updatedAt,
           statusHistory: data.statusHistory ?? [],
           logs: data.logs ?? [],
+          threadId: data.threadId ?? null,
+          emailSubject: data.emailSubject ?? null,
         });
       }
     } catch {
@@ -203,6 +207,25 @@ export function RunDetailView({
           </button>
         )}
       </div>
+
+      {/* Email thread info */}
+      {run.threadId && (
+        <div className="border rounded-lg p-4 bg-muted/30">
+          <h3 className="text-sm font-semibold mb-2">Email Thread</h3>
+          <div className="space-y-1 text-sm">
+            {run.emailSubject && (
+              <div>
+                <span className="text-muted-foreground">Subject:</span>{" "}
+                <span>{run.emailSubject}</span>
+              </div>
+            )}
+            <div>
+              <span className="text-muted-foreground">Thread ID:</span>{" "}
+              <span className="font-mono text-xs">{run.threadId}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Status history timeline */}
       <div>
