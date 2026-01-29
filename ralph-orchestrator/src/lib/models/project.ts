@@ -19,6 +19,14 @@ export interface IProviderKey {
   maskedValue: string;
 }
 
+export interface IAwsAuth {
+  authType: "role" | "access-keys";
+  roleArn?: string;
+  accessKeyId?: string;
+  secretAccessKeyArn?: string;
+  maskedSecretKey?: string;
+}
+
 export interface IProject extends Document {
   userId: string;
   name: string;
@@ -28,6 +36,7 @@ export interface IProject extends Document {
   envVars?: IEnvVar[];
   providerKeys?: IProviderKey[];
   awsRegion?: string;
+  awsAuth?: IAwsAuth;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -60,6 +69,17 @@ const ProviderKeySchema = new Schema<IProviderKey>(
   { _id: false }
 );
 
+const AwsAuthSchema = new Schema<IAwsAuth>(
+  {
+    authType: { type: String, enum: ["role", "access-keys"], required: true },
+    roleArn: { type: String },
+    accessKeyId: { type: String },
+    secretAccessKeyArn: { type: String },
+    maskedSecretKey: { type: String },
+  },
+  { _id: false }
+);
+
 const ProjectSchema = new Schema<IProject>(
   {
     userId: { type: String, required: true, index: true },
@@ -70,6 +90,7 @@ const ProjectSchema = new Schema<IProject>(
     envVars: { type: [EnvVarSchema], default: [] },
     providerKeys: { type: [ProviderKeySchema], default: [] },
     awsRegion: { type: String, default: "us-east-1" },
+    awsAuth: { type: AwsAuthSchema },
   },
   { timestamps: true }
 );
