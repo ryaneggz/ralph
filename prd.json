@@ -722,7 +722,7 @@
         "Typecheck passes"
       ],
       "priority": 49,
-      "passes": false,
+      "passes": true,
       "notes": "Optional/later phase. deepagentsjs subagent protocol."
     },
     {

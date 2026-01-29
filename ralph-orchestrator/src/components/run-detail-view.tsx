@@ -118,12 +118,75 @@ export function RunDetailView({
     }
   }, [projectId, runId]);
 
-  // Poll every 5s while run is active
+  // Use SSE streaming for real-time updates when run is active
   useEffect(() => {
     if (!isActive) return;
-    const interval = setInterval(fetchRun, 5000);
-    return () => clearInterval(interval);
-  }, [isActive, fetchRun]);
+
+    let eventSource: EventSource | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let closed = false;
+
+    function connect() {
+      if (closed) return;
+      eventSource = new EventSource(`/api/v1/agents/${runId}/stream`);
+
+      eventSource.addEventListener("log", (e: MessageEvent) => {
+        const { index, line } = JSON.parse(e.data);
+        setRun((prev) => {
+          if (index < prev.logs.length) return prev;
+          const newLogs = [...prev.logs];
+          newLogs[index] = line;
+          return { ...prev, logs: newLogs };
+        });
+      });
+
+      eventSource.addEventListener("status", (e: MessageEvent) => {
+        const data = JSON.parse(e.data);
+        setRun((prev) => ({
+          ...prev,
+          status: data.status ?? prev.status,
+          updatedAt: data.updatedAt ?? prev.updatedAt,
+          failureReason: data.failureReason ?? prev.failureReason,
+          statusHistory: data.statusHistory ?? prev.statusHistory,
+        }));
+      });
+
+      eventSource.addEventListener("messages", (e: MessageEvent) => {
+        const { messages } = JSON.parse(e.data);
+        setRun((prev) => {
+          const existingIds = new Set((prev.emailMessages ?? []).map((m) => m.messageId));
+          const newMsgs = (messages as EmailMessage[]).filter((m) => !existingIds.has(m.messageId));
+          if (newMsgs.length === 0) return prev;
+          return {
+            ...prev,
+            emailMessages: [...(prev.emailMessages ?? []), ...newMsgs],
+          };
+        });
+      });
+
+      eventSource.addEventListener("done", () => {
+        eventSource?.close();
+        // Do a final full fetch to ensure consistency
+        fetchRun();
+      });
+
+      eventSource.onerror = () => {
+        eventSource?.close();
+        // Reconnect after 3s on error
+        if (!closed) {
+          reconnectTimer = setTimeout(connect, 3000);
+        }
+      };
+    }
+
+    connect();
+
+    return () => {
+      closed = true;
+      eventSource?.close();
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+    };
+  }, [isActive, runId, fetchRun]);
 
   // Auto-scroll to bottom when new logs arrive
   useEffect(() => {
