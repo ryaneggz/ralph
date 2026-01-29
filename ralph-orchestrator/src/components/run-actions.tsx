@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface RunSummary {
   _id: string;
@@ -55,6 +56,24 @@ export function RunActions({
   useEffect(() => {
     fetchRuns();
   }, [fetchRuns]);
+
+  // Poll every 5s when any run is active (queued or running)
+  const hasActiveRun = runs.some(
+    (r) => r.status === "queued" || r.status === "running"
+  );
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    if (hasActiveRun) {
+      pollRef.current = setInterval(fetchRuns, 5000);
+      return () => {
+        if (pollRef.current) clearInterval(pollRef.current);
+      };
+    }
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  }, [hasActiveRun, fetchRuns]);
 
   const startRun = async (type: "plan" | "apply" | "destroy") => {
     if (!defaultProvider) return;
@@ -185,7 +204,11 @@ export function RunActions({
       {runs.length > 0 && (
         <div className="border rounded-md divide-y">
           {runs.map((run) => (
-            <div key={run._id} className="flex items-center justify-between p-3">
+            <Link
+              key={run._id}
+              href={`/projects/${projectId}/runs/${run._id}`}
+              className="flex items-center justify-between p-3 hover:bg-muted/50 transition-colors"
+            >
               <div className="flex items-center gap-3">
                 <span className="text-sm font-medium capitalize">{run.type}</span>
                 <span className={`text-xs px-2 py-0.5 rounded ${STATUS_STYLES[run.status] || ""}`}>
@@ -198,7 +221,7 @@ export function RunActions({
               <span className="text-xs text-muted-foreground">
                 {new Date(run.createdAt).toLocaleString()}
               </span>
-            </div>
+            </Link>
           ))}
         </div>
       )}

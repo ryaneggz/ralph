@@ -651,3 +651,23 @@
   - Destroy confirmation is stricter than Apply (type name vs simple confirm) due to destructive nature
   - startRun() already supported "destroy" type — only needed UI button
 ---
+
+## 2026-01-29 - US-32
+- Implemented run detail view with status history timeline and real-time polling
+- Created GET /api/projects/[id]/runs/[runId] endpoint for single run retrieval
+- Built RunDetailView client component with status badge, timeline, and 5s polling for active runs
+- Created /projects/[id]/runs/[runId] page with back navigation and run metadata
+- Made run list items clickable (Link) to navigate to run detail
+- Added 5s polling to RunActions for auto-refresh when active runs exist
+- Files changed:
+  - src/app/api/projects/[id]/runs/[runId]/route.ts (new)
+  - src/app/projects/[id]/runs/[runId]/page.tsx (new)
+  - src/components/run-detail-view.tsx (new)
+  - src/components/run-actions.tsx (updated - clickable runs, polling)
+  - prd.json (updated - US-32 passes: true)
+- **Learnings for future iterations:**
+  - Run detail API at /api/projects/[id]/runs/[runId] — returns full run including logs and statusHistory
+  - Polling pattern: useEffect with setInterval(fetchFn, 5000) gated by isActive check, cleanup on unmount
+  - Status timeline uses vertical line + colored dots pattern for visual status progression
+  - Run list items are Links for navigation; run detail page is a server component wrapping client RunDetailView
+---
