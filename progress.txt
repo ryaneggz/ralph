@@ -22,6 +22,7 @@
 - Never return secrets from API — use boolean flags (e.g., hasAccessToken) or maskedValue
 - Env vars stored with maskedValue in DB to avoid decrypting for display
 - API sub-resources: /api/projects/[id]/env-vars for env var CRUD
+- Project-level mutations (rename, delete) use /api/projects/[id] route with PATCH/DELETE methods
 ---
 
 ## 2026-01-28 - US-01
@@ -142,5 +143,22 @@
   - API never returns actual secret values — only masked versions
   - Source field distinguishes "platform" (auto-injected provider keys) from "user" (custom)
   - AWS Secrets Manager integration is stubbed with `pending-encryption` placeholder ARN
+---
+
+## 2026-01-29 - US-05
+- Implemented project rename via settings page
+- Created PATCH /api/projects/[id] endpoint with name validation (non-empty, max 100 chars)
+- Created ProjectRenameForm client component with inline validation, success/error feedback
+- Added "Project Name" section to project settings page (above repo config)
+- router.refresh() updates sidebar and header after rename
+- Files changed:
+  - src/app/api/projects/[id]/route.ts (new)
+  - src/components/project-rename-form.tsx (new)
+  - src/app/projects/[id]/settings/page.tsx (updated - added rename section)
+  - prd.json (updated - US-05 passes: true)
+- **Learnings for future iterations:**
+  - Project-level API routes go at /api/projects/[id]/route.ts (PATCH, DELETE, etc.)
+  - router.refresh() from next/navigation re-fetches server components, updating sidebar project names
+  - Settings page sections order: Project Name > Repository > Env Vars
 ---
 

@@ -5,6 +5,7 @@ import { Project } from "@/lib/models/project";
 import { AppShell } from "@/components/app-shell";
 import { RepoConfigForm } from "@/components/repo-config-form";
 import { EnvVarsConfigForm } from "@/components/env-vars-config-form";
+import { ProjectRenameForm } from "@/components/project-rename-form";
 import Link from "next/link";
 
 export default async function ProjectSettingsPage({
@@ -56,6 +57,11 @@ export default async function ProjectSettingsPage({
         </div>
 
         <h2 className="text-2xl font-bold">{project.name} — Settings</h2>
+
+        <section className="mt-8">
+          <h3 className="text-lg font-semibold mb-4">Project Name</h3>
+          <ProjectRenameForm projectId={id} currentName={project.name} />
+        </section>
 
         <section className="mt-8">
           <h3 className="text-lg font-semibold mb-4">Repository Configuration</h3>
