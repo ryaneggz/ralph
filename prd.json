@@ -413,7 +413,7 @@
         "Typecheck passes"
       ],
       "priority": 28,
-      "passes": false,
+      "passes": true,
       "notes": "Use @uiw/react-md-editor or similar."
     },
     {

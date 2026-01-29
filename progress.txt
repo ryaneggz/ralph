@@ -537,3 +537,24 @@
   - PromptMdViewer is a client component due to useMemo; receives content as prop from server component
   - Workspace page section order: Provider Status > PROMPT.md > Infrastructure as Code
 ---
+
+## 2026-01-29 - US-26
+- Implemented PROMPT.md editor with split pane (Markdown editor + live preview)
+- Frontmatter editable via form fields (title, agent, iterations, provider + any existing keys)
+- Body editable as raw Markdown using @uiw/react-md-editor with syntax highlighting
+- Added PUT /api/projects/[id]/prompt-md endpoint for saving
+- Created /projects/[id]/prompt page with PromptMdEditor component
+- Assembled frontmatter + body into full PROMPT.md content on save
+- Files changed:
+  - src/components/prompt-md-editor.tsx (new)
+  - src/app/api/projects/[id]/prompt-md/route.ts (updated - added PUT handler)
+  - src/app/projects/[id]/prompt/page.tsx (new)
+  - ralph-orchestrator/package.json (updated - added @uiw/react-md-editor, @uiw/react-markdown-preview)
+  - prd.json (updated - US-26 passes: true)
+- **Learnings for future iterations:**
+  - @uiw/react-md-editor must use dynamic import with ssr: false (depends on browser APIs)
+  - gray-matter `matter(content)` returns { data, content } — data is frontmatter object, content is body
+  - Frontmatter reassembled via simple YAML format (key: value lines) wrapped in --- delimiters
+  - Prompt editor page at /projects/[id]/prompt — linked from PromptMdViewer empty state
+  - data-color-mode="light" attribute needed on MDEditor container for proper theming
+---
