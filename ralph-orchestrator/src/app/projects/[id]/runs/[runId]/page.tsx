@@ -72,6 +72,7 @@ export default async function RunDetailPage({
                 timestamp: String(h.timestamp),
               })
             ),
+            logs: ((run.logs as string[]) ?? []).map(String),
           }}
         />
       </div>

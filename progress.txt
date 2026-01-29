@@ -671,3 +671,21 @@
   - Status timeline uses vertical line + colored dots pattern for visual status progression
   - Run list items are Links for navigation; run detail page is a server component wrapping client RunDetailView
 ---
+
+## 2026-01-29 - US-33
+- Implemented run log viewer in RunDetailView component
+- Log viewer with scrollable container, auto-scroll on new logs, and 5s polling for active runs
+- Timestamped entries parsed from "[ISO timestamp] message" format
+- Error lines highlighted in red using regex pattern matching (error, failed, exception, panic, fatal)
+- Download as .txt file via Blob URL
+- Empty state shows "Waiting for log output..." for active runs
+- Files changed:
+  - src/components/run-detail-view.tsx (updated - added log viewer, download, error highlighting)
+  - src/app/projects/[id]/runs/[runId]/page.tsx (updated - passes logs in initialRun)
+  - prd.json (updated - US-33 passes: true)
+- **Learnings for future iterations:**
+  - Log lines can be plain text or timestamped with "[ISO]" prefix — parseLogLine handles both
+  - Error detection uses regex patterns for common error keywords (ERROR, failed, exception, panic, fatal)
+  - Auto-scroll uses ref + scrollIntoView, disabled when user scrolls up (handleLogScroll checks distance from bottom)
+  - Download uses Blob + createObjectURL pattern for client-side file generation
+---

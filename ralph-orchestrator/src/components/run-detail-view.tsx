@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 interface StatusHistoryEntry {
   status: string;
@@ -15,6 +15,7 @@ interface RunDetail {
   createdAt: string;
   updatedAt: string;
   statusHistory: StatusHistoryEntry[];
+  logs: string[];
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -35,6 +36,31 @@ const STATUS_DOT: Record<string, string> = {
   canceled: "bg-gray-400",
 };
 
+// Patterns to detect error lines in logs
+const ERROR_PATTERNS = [
+  /^error/i,
+  /\berror:/i,
+  /\bERROR\b/,
+  /\bfailed\b/i,
+  /\bfailure\b/i,
+  /\bexception\b/i,
+  /\bpanic\b/i,
+  /\bfatal\b/i,
+];
+
+function isErrorLine(line: string): boolean {
+  return ERROR_PATTERNS.some((p) => p.test(line));
+}
+
+// Parse log line: "[2026-01-29T12:00:00.000Z] message" or plain text
+function parseLogLine(line: string): { timestamp: string | null; message: string } {
+  const match = line.match(/^\[(\d{4}-\d{2}-\d{2}T[\d:.]+Z?)\]\s?(.*)/);
+  if (match) {
+    return { timestamp: match[1], message: match[2] };
+  }
+  return { timestamp: null, message: line };
+}
+
 export function RunDetailView({
   projectId,
   runId,
@@ -45,6 +71,8 @@ export function RunDetailView({
   initialRun: RunDetail;
 }) {
   const [run, setRun] = useState<RunDetail>(initialRun);
+  const logEndRef = useRef<HTMLDivElement>(null);
+  const [autoScroll, setAutoScroll] = useState(true);
 
   const isActive = run.status === "queued" || run.status === "running";
 
@@ -61,6 +89,7 @@ export function RunDetailView({
           createdAt: data.createdAt,
           updatedAt: data.updatedAt,
           statusHistory: data.statusHistory ?? [],
+          logs: data.logs ?? [],
         });
       }
     } catch {
@@ -74,6 +103,30 @@ export function RunDetailView({
     const interval = setInterval(fetchRun, 5000);
     return () => clearInterval(interval);
   }, [isActive, fetchRun]);
+
+  // Auto-scroll to bottom when new logs arrive
+  useEffect(() => {
+    if (autoScroll && logEndRef.current) {
+      logEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [run.logs, autoScroll]);
+
+  function handleDownloadLogs() {
+    const content = run.logs.join("\n");
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `run-${run._id}-logs.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function handleLogScroll(e: React.UIEvent<HTMLDivElement>) {
+    const el = e.currentTarget;
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+    setAutoScroll(atBottom);
+  }
 
   return (
     <div className="mt-6 space-y-6">
@@ -121,6 +174,54 @@ export function RunDetailView({
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">No status history available.</p>
+        )}
+      </div>
+
+      {/* Log viewer */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold">Logs</h3>
+          {run.logs.length > 0 && (
+            <button
+              onClick={handleDownloadLogs}
+              className="text-xs text-primary hover:underline"
+            >
+              Download .txt
+            </button>
+          )}
+        </div>
+        {run.logs.length > 0 ? (
+          <div
+            onScroll={handleLogScroll}
+            className="bg-muted/50 border rounded-lg p-4 max-h-[500px] overflow-y-auto font-mono text-xs leading-relaxed"
+          >
+            {run.logs.map((line, i) => {
+              const { timestamp, message } = parseLogLine(line);
+              const error = isErrorLine(line);
+              return (
+                <div
+                  key={i}
+                  className={`py-0.5 ${error ? "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 -mx-2 px-2 rounded" : "text-foreground"}`}
+                >
+                  {timestamp && (
+                    <span className="text-muted-foreground mr-2 select-none">
+                      [{new Date(timestamp).toLocaleTimeString()}]
+                    </span>
+                  )}
+                  <span>{message}</span>
+                </div>
+              );
+            })}
+            <div ref={logEndRef} />
+          </div>
+        ) : (
+          <div className="bg-muted/50 border rounded-lg p-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              {isActive
+                ? "Waiting for log output..."
+                : "No logs available for this run."}
+            </p>
+          </div>
         )}
       </div>
     </div>
