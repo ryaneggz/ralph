@@ -693,7 +693,7 @@
         "Typecheck passes"
       ],
       "priority": 47,
-      "passes": false,
+      "passes": true,
       "notes": "Security-critical. Regex patterns for known key formats."
     },
     {

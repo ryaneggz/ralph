@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Project } from "@/lib/models/project";
 import { Run } from "@/lib/models/run";
+import { redactLogLines } from "@/lib/redact-secrets";
 
 export async function GET(
   _request: NextRequest,
@@ -32,5 +33,11 @@ export async function GET(
     return NextResponse.json({ error: "Run not found" }, { status: 404 });
   }
 
-  return NextResponse.json(run);
+  // Redact secrets from logs before returning to client
+  const redactedRun = {
+    ...run,
+    logs: redactLogLines(run.logs || []),
+  };
+
+  return NextResponse.json(redactedRun);
 }

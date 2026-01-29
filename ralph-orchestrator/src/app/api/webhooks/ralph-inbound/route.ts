@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { connectDB } from "@/lib/db";
 import { Run } from "@/lib/models/run";
+import { redactSecrets } from "@/lib/redact-secrets";
 
 /**
  * POST /api/webhooks/ralph-inbound
@@ -88,14 +89,14 @@ export async function POST(request: NextRequest) {
     timestamp: now,
   });
 
-  // Append to run logs
+  // Append to run logs (redact secrets before storage)
   const logPrefix = `[${now.toISOString()}]`;
-  run.logs.push(`${logPrefix} Inbound email received — subject: ${emailSubject}`);
+  run.logs.push(redactSecrets(`${logPrefix} Inbound email received — subject: ${emailSubject}`));
 
-  // Append email body content as log lines
+  // Append email body content as log lines (redacted)
   const bodyLines = body.split("\n");
   for (const line of bodyLines) {
-    run.logs.push(`${logPrefix} [RALPH] ${line}`);
+    run.logs.push(redactSecrets(`${logPrefix} [RALPH] ${line}`));
   }
 
   // Detect error emails and transition run status to failed
