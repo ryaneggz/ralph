@@ -31,14 +31,20 @@ Edit `~/.env/ralph-orchestrator/.env.local` and fill in real values:
 | `MONGODB_URI` | MongoDB Atlas → Connect → Driver → copy connection string |
 | `AUTH_SECRET` | Run `npx auth secret` and copy the output |
 | `AUTH_URL` | `http://localhost:3000` for local dev |
-| `AWS_ACCESS_KEY_ID` | AWS IAM → Create access key (needed for agent provisioning stories) |
+| `GITHUB_CLIENT_ID` | GitHub → Settings → Developer Settings → OAuth Apps → New |
+| `GITHUB_CLIENT_SECRET` | Same as above |
+| `AWS_ACCESS_KEY_ID` | AWS IAM → Create access key (see `aws-iam-policy.json` for permissions) |
 | `AWS_SECRET_ACCESS_KEY` | Same as above |
 | `AWS_REGION` | Your preferred region, e.g. `us-east-1` |
 | `PULUMI_ACCESS_TOKEN` | Pulumi Console → Settings → Access Tokens (needed for IaC stories) |
 
-> **Minimum for US-01 (auth):** `MONGODB_URI`, `AUTH_SECRET`, `AUTH_URL`
+> **Minimum for US-01–US-03 (auth):** `MONGODB_URI`, `AUTH_SECRET`, `AUTH_URL`
+>
+> **For GitHub login:** Add `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`
 >
 > AWS and Pulumi vars can be added later when those stories come up.
+>
+> **Note on repo access tokens:** Per-project repo access tokens (for private repos) are configured in the UI (US-04a) and stored in AWS Secrets Manager — they are NOT env vars.
 
 ## 4. Verify symlink exists
 
