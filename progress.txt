@@ -1,0 +1,40 @@
+## Codebase Patterns
+- Next.js 14+ App Router with src/ directory and @/* import alias
+- shadcn/ui initialized with Tailwind v4, CSS variables
+- MongoDB connection uses global cache singleton pattern in src/lib/db.ts
+- Type definitions live in src/lib/types/
+- Auth config in src/lib/auth.ts using next-auth
+- User model in src/lib/models/user.ts (Mongoose)
+- NextAuth v5 beta uses `next-auth/providers/credentials` and `next-auth/providers/github` imports
+- Signup is a custom API route at /api/auth/signup (not part of NextAuth)
+- Auth pages use route group `(auth)` with login/ and signup/ directories
+- shadcn/ui components added via `npx shadcn@latest add <component>`
+---
+
+## 2026-01-28 - US-01
+- Implemented sign up and sign in with email/password credentials and GitHub OAuth
+- Configured NextAuth.js with JWT sessions (7-day expiry), credentials + GitHub providers
+- Created User Mongoose model with email, password (bcrypt hashed), name, emailVerified fields
+- Built login page with email/password form and GitHub OAuth button
+- Built signup page with name/email/password form and GitHub OAuth button
+- Created /api/auth/signup POST route with validation and bcrypt hashing
+- Created /api/auth/[...nextauth] route handler
+- Added middleware for protected routes
+- Updated home page to redirect based on auth state
+- Files changed:
+  - src/lib/auth.ts (NextAuth config)
+  - src/lib/models/user.ts (new)
+  - src/app/api/auth/[...nextauth]/route.ts (new)
+  - src/app/api/auth/signup/route.ts (new)
+  - src/app/(auth)/login/page.tsx (new)
+  - src/app/(auth)/signup/page.tsx (new)
+  - src/middleware.ts (new)
+  - src/app/page.tsx (updated to redirect)
+  - src/components/ui/ (button, input, label, card, separator via shadcn)
+- **Learnings for future iterations:**
+  - NextAuth v5 beta exports `auth` which can be used directly as middleware export
+  - GitHub OAuth auto-creates users in the signIn callback (no adapter needed for basic flow)
+  - Email verification is a TODO - placeholder noted in signup route
+  - bcryptjs used instead of bcrypt for easier cross-platform install
+---
+

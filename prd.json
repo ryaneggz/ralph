@@ -1,0 +1,709 @@
+{
+  "project": "Ralph Orchestrator",
+  "branchName": "ralph/scaffold-platform",
+  "description": "Web-based platform for provisioning and interacting with Ralph agents on AWS. Gmail-style inbox as orchestration layer.",
+  "userStories": [
+    {
+      "id": "US-01",
+      "title": "Sign up and sign in",
+      "description": "As a user, I can sign up and sign in so I can access my workspace.",
+      "acceptanceCriteria": [
+        "Sign up with email/password and GitHub OAuth via NextAuth.js",
+        "Email verification sent on registration",
+        "JWT session stored in HTTP-only cookie with 7-day expiry",
+        "Redirects to workspace on successful auth",
+        "Login page with email/password form and OAuth buttons",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Foundation story — must be completed first. Use NextAuth.js with MongoDB adapter."
+    },
+    {
+      "id": "US-02",
+      "title": "Sign out",
+      "description": "As a user, I can sign out so my session is closed.",
+      "acceptanceCriteria": [
+        "Sign out button in user menu dropdown",
+        "JWT invalidated on sign out",
+        "Redirects to login page after sign out",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-03",
+      "title": "Password reset / recovery",
+      "description": "As a user, I can reset my password so I'm not blocked.",
+      "acceptanceCriteria": [
+        "'Forgot password' link on login page",
+        "Email with reset token sent to registered email",
+        "Reset token expires in 1 hour",
+        "New password form with validation (min 8 chars)",
+        "Success message and redirect to login",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-04",
+      "title": "Create a project",
+      "description": "As a user, I can create a project so I can group settings, prompts, and runs.",
+      "acceptanceCriteria": [
+        "'New Project' button in sidebar",
+        "Form with name (required) and description (optional)",
+        "Project created in MongoDB with userId reference",
+        "Redirects to new project workspace",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": "Projects scope all downstream features (keys, IaC, runs)."
+    },
+    {
+      "id": "US-05",
+      "title": "Rename a project",
+      "description": "As a user, I can rename a project so it stays organized.",
+      "acceptanceCriteria": [
+        "Inline edit or settings modal for project name",
+        "Name updates immediately in sidebar and header",
+        "Validation: non-empty, max 100 chars",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-06",
+      "title": "Delete a project",
+      "description": "As a user, I can delete a project so I can remove unused work.",
+      "acceptanceCriteria": [
+        "Delete button in project settings",
+        "Confirmation dialog with project name typed to confirm",
+        "Cascades delete to runs, drafts, IaC configs",
+        "Irreversible warning shown",
+        "Redirects to project list after deletion",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-07",
+      "title": "Switch between projects",
+      "description": "As a user, I can switch between projects so I can manage multiple environments.",
+      "acceptanceCriteria": [
+        "Project switcher dropdown in sidebar or header",
+        "Switching loads project-scoped data (runs, settings, IaC)",
+        "Last-used project ID stored in localStorage",
+        "Typecheck passes"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-08",
+      "title": "Add Claude Code API key",
+      "description": "As a user, I can add a provider API key for Claude Code so Ralph agents can use it.",
+      "acceptanceCriteria": [
+        "Input field for API key on provider settings page",
+        "Key encrypted via AWS Secrets Manager on save",
+        "Test-connection button validates key against Anthropic API",
+        "Success/error feedback toast",
+        "Typecheck passes"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": "Keys stored at /ralph/{userId}/keys/{provider} in Secrets Manager."
+    },
+    {
+      "id": "US-09",
+      "title": "Add Codeex API key",
+      "description": "As a user, I can add a provider API key for Codeex so Ralph agents can use it.",
+      "acceptanceCriteria": [
+        "Same flow as US-08 for Codeex provider",
+        "Provider-specific validation endpoint",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-10",
+      "title": "Add OpenCode API key",
+      "description": "As a user, I can add a provider API key for OpenCode so Ralph agents can use it.",
+      "acceptanceCriteria": [
+        "Same flow as US-08 for OpenCode provider",
+        "Provider-specific validation endpoint",
+        "Typecheck passes"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-11",
+      "title": "View provider configuration status",
+      "description": "As a user, I can see which providers are configured (configured/not configured) without exposing plaintext keys.",
+      "acceptanceCriteria": [
+        "Provider list shows status badges: Configured ✓ / Not Configured",
+        "Masked key display (e.g., sk-...abc) for configured providers",
+        "Full key never returned by API",
+        "Typecheck passes"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-12",
+      "title": "Rotate a provider key",
+      "description": "As a user, I can rotate a provider key so I can replace compromised/expired keys.",
+      "acceptanceCriteria": [
+        "'Rotate' button per provider on settings page",
+        "Enter new key, validate, replace in Secrets Manager",
+        "Running agents unaffected until next loop iteration",
+        "Typecheck passes"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-13",
+      "title": "Delete a provider key",
+      "description": "As a user, I can delete a provider key so it can no longer be used.",
+      "acceptanceCriteria": [
+        "Delete button with confirmation dialog",
+        "Key removed from Secrets Manager",
+        "Provider status reverts to 'Not Configured'",
+        "Typecheck passes"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-14",
+      "title": "Keys encrypted at rest, never shown in full",
+      "description": "As a user, I can be confident keys are encrypted at rest and never shown in full in the UI.",
+      "acceptanceCriteria": [
+        "AES-256 encryption via AWS Secrets Manager verified",
+        "API endpoint for keys returns only masked prefix (first 4 + last 4 chars)",
+        "Audit log entry created on any key access",
+        "No plaintext key in browser network tab responses",
+        "Typecheck passes"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": "Security-critical. Verify with integration test."
+    },
+    {
+      "id": "US-15",
+      "title": "Configure AWS region",
+      "description": "As a user, I can configure AWS region so runs target the correct region.",
+      "acceptanceCriteria": [
+        "Region dropdown with all AWS regions",
+        "Persists per project in MongoDB",
+        "Default: us-east-1",
+        "Typecheck passes"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-16",
+      "title": "Configure AWS authentication",
+      "description": "As a user, I can configure AWS authentication (assume-role or access keys) so the system can provision infrastructure.",
+      "acceptanceCriteria": [
+        "Choice of IAM Role ARN or Access Key pair (radio buttons)",
+        "For Role ARN: text input with ARN format validation",
+        "For Access Keys: key ID + secret key inputs",
+        "Encrypted storage in Secrets Manager",
+        "Least-privilege IAM role template link provided",
+        "Typecheck passes"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-17",
+      "title": "Test AWS connectivity",
+      "description": "As a user, I can test AWS connectivity so I can verify credentials before running IaC.",
+      "acceptanceCriteria": [
+        "'Test Connection' button on AWS settings page",
+        "Calls STS GetCallerIdentity with stored credentials",
+        "Shows success with AWS account ID or error message",
+        "Loading state during test",
+        "Typecheck passes"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-18",
+      "title": "Update AWS credentials",
+      "description": "As a user, I can update AWS credentials so I can rotate secrets safely.",
+      "acceptanceCriteria": [
+        "Edit button reveals credential form pre-filled with masked values",
+        "Old credentials replaced on save",
+        "Validation (test connection) before save",
+        "Running agents unaffected",
+        "Typecheck passes"
+      ],
+      "priority": 18,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-19",
+      "title": "Choose an IaC template",
+      "description": "As a user, I can choose an IaC template so I can start from a known baseline.",
+      "acceptanceCriteria": [
+        "Template selector with options: Fargate, Lambda, EC2 Spot",
+        "Each template shows description and estimated cost range",
+        "Selection saved to project config",
+        "Typecheck passes"
+      ],
+      "priority": 19,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-20",
+      "title": "Generate IaC files from template",
+      "description": "As a user, I can generate IaC files from the selected template so I can provision infrastructure.",
+      "acceptanceCriteria": [
+        "'Generate' button produces Pulumi TypeScript from selected template",
+        "Files stored per project in MongoDB",
+        "Viewable immediately after generation",
+        "Typecheck passes"
+      ],
+      "priority": 20,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-21",
+      "title": "View generated IaC files",
+      "description": "As a user, I can view the generated IaC files so I can understand what will be applied.",
+      "acceptanceCriteria": [
+        "Monaco editor in read-only mode",
+        "Syntax highlighting for TypeScript",
+        "File tree sidebar if multiple files",
+        "Typecheck passes"
+      ],
+      "priority": 21,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-22",
+      "title": "Edit IaC files in the UI",
+      "description": "As a user (advanced), I can edit the IaC files in the UI before execution so I can customize the setup.",
+      "acceptanceCriteria": [
+        "Toggle from read-only to edit mode in Monaco editor",
+        "Validation runs on save (TypeScript syntax check)",
+        "Invalid config shows inline error markers",
+        "Save button with success/error feedback",
+        "Typecheck passes"
+      ],
+      "priority": 22,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-23",
+      "title": "Save IaC drafts",
+      "description": "As a user, I can save IaC drafts so I don't lose changes.",
+      "acceptanceCriteria": [
+        "Auto-save on edit with debounce (2s)",
+        "Manual 'Save Draft' button",
+        "Draft indicator badge in UI",
+        "Drafts persist across sessions in MongoDB",
+        "Typecheck passes"
+      ],
+      "priority": 23,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-24",
+      "title": "IaC version history",
+      "description": "As a user, I can see version history (draft vs applied) so I know what changed.",
+      "acceptanceCriteria": [
+        "Version list with timestamps and labels (draft/applied)",
+        "Inline diff view between any two versions",
+        "Restore previous version button",
+        "Typecheck passes"
+      ],
+      "priority": 24,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-25",
+      "title": "View current PROMPT.md",
+      "description": "As a user, I can view the current PROMPT.md so I understand what will be sent to the Ralph agent.",
+      "acceptanceCriteria": [
+        "Read-only Markdown preview panel",
+        "Frontmatter fields displayed as metadata badges/chips",
+        "Syntax highlighting for code blocks",
+        "Typecheck passes"
+      ],
+      "priority": 25,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-26",
+      "title": "Edit PROMPT.md",
+      "description": "As a user, I can edit PROMPT.md so I can control the Ralph loop instructions.",
+      "acceptanceCriteria": [
+        "Markdown editor with live preview (split pane)",
+        "Frontmatter editable via form fields (title, agent, iterations, etc.)",
+        "Body editable as raw Markdown with syntax highlighting",
+        "Save persists to project in MongoDB",
+        "Typecheck passes"
+      ],
+      "priority": 26,
+      "passes": false,
+      "notes": "Use @uiw/react-md-editor or similar."
+    },
+    {
+      "id": "US-27",
+      "title": "Reset PROMPT.md to default",
+      "description": "As a user, I can reset PROMPT.md to a default template so I can recover from mistakes.",
+      "acceptanceCriteria": [
+        "'Reset to Default' button with confirmation dialog",
+        "Restores template for selected category",
+        "Preserves project-specific variables (repo URL, branch)",
+        "Typecheck passes"
+      ],
+      "priority": 27,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-28",
+      "title": "Select provider for a run",
+      "description": "As a user, I can select which provider (Claude Code / Codeex / OpenCode) a run should use so I can choose capabilities/cost.",
+      "acceptanceCriteria": [
+        "Provider dropdown in compose/run dialog",
+        "Only configured providers selectable (others disabled with tooltip)",
+        "Warning shown if no providers configured with link to settings",
+        "Selection persists as default for project",
+        "Typecheck passes"
+      ],
+      "priority": 28,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-29",
+      "title": "Start a Plan run",
+      "description": "As a user, I can start a Plan run so I can preview changes before applying.",
+      "acceptanceCriteria": [
+        "'Plan' button in project workspace",
+        "Queues run with type=plan via SQS",
+        "Shows Pulumi preview output in log viewer",
+        "No infrastructure modified (dry run)",
+        "Status transitions: queued → running → succeeded/failed",
+        "Typecheck passes"
+      ],
+      "priority": 29,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-30",
+      "title": "Start an Apply run",
+      "description": "As a user, I can start an Apply run so infrastructure changes are executed.",
+      "acceptanceCriteria": [
+        "'Apply' button with confirmation dialog",
+        "Queues run with type=apply via SQS",
+        "Pulumi up executed; resources provisioned",
+        "Streaming logs shown in real-time",
+        "Status transitions: queued → running → succeeded/failed",
+        "Typecheck passes"
+      ],
+      "priority": 30,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-31",
+      "title": "Start a Destroy run",
+      "description": "As a user, I can start a Destroy run so I can tear down resources.",
+      "acceptanceCriteria": [
+        "'Destroy' button with double confirmation (type project name)",
+        "Queues run with type=destroy via SQS",
+        "All project resources removed via Pulumi destroy",
+        "Streaming logs shown in real-time",
+        "Status transitions: queued → running → succeeded/failed",
+        "Typecheck passes"
+      ],
+      "priority": 31,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-32",
+      "title": "View run status",
+      "description": "As a user, I can see the run status (queued/running/succeeded/failed/canceled) so I know progress.",
+      "acceptanceCriteria": [
+        "Status badges in run list: queued (blue), running (yellow pulse), succeeded (green), failed (red), canceled (gray)",
+        "Real-time updates via WebSocket",
+        "Status history timeline in run detail view",
+        "Typecheck passes"
+      ],
+      "priority": 32,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-33",
+      "title": "View run logs",
+      "description": "As a user, I can see run logs so I can debug failures.",
+      "acceptanceCriteria": [
+        "Log viewer with streaming output",
+        "Timestamped entries",
+        "Error lines highlighted in red",
+        "Downloadable as .txt file",
+        "Typecheck passes"
+      ],
+      "priority": 33,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-34",
+      "title": "Cancel a running job",
+      "description": "As a user, I can cancel a running job so I can stop unintended changes.",
+      "acceptanceCriteria": [
+        "'Cancel' button visible on running jobs",
+        "Sends abort signal to SQS/ECS",
+        "Status transitions to 'canceled'",
+        "Partial changes noted in log",
+        "Typecheck passes"
+      ],
+      "priority": 34,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-35",
+      "title": "Re-run a previous run",
+      "description": "As a user, I can re-run a previous run (with the same draft) so I can retry after fixing issues.",
+      "acceptanceCriteria": [
+        "'Re-run' button on completed/failed runs",
+        "Clones config into new run entry",
+        "Editable before starting",
+        "New run appears in run list",
+        "Typecheck passes"
+      ],
+      "priority": 35,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-36",
+      "title": "Email-driven Ralph loop kickoff",
+      "description": "As a user, when I start a run, the system sends an email (constructed from PROMPT.md) to kick off the Ralph loop.",
+      "acceptanceCriteria": [
+        "Run start triggers PROMPT.md generation from current editor content",
+        "Email sent to agent endpoint with PROMPT.md as body",
+        "Confirmation shown with thread ID",
+        "Thread ID stored on run record",
+        "Typecheck passes"
+      ],
+      "priority": 36,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-37",
+      "title": "View email thread for a run",
+      "description": "As a user, I can see the email thread associated with a run (subject/thread ID and timestamps).",
+      "acceptanceCriteria": [
+        "Thread metadata displayed in run detail view",
+        "Subject line, thread ID, timestamps for each message",
+        "Messages displayed chronologically",
+        "Typecheck passes"
+      ],
+      "priority": 37,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-38",
+      "title": "Inbound Ralph emails displayed as run logs",
+      "description": "As a user, inbound emails from the Ralph loop are captured and displayed as run logs.",
+      "acceptanceCriteria": [
+        "Inbound webhook endpoint captures Ralph responses",
+        "Parsed content appended to run log",
+        "Real-time display via WebSocket push",
+        "Typecheck passes"
+      ],
+      "priority": 38,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-39",
+      "title": "Email failures reflected in run status",
+      "description": "As a user, failures reported by email are reflected in run status so I can act quickly.",
+      "acceptanceCriteria": [
+        "Error emails parsed by inbound webhook",
+        "Run status auto-transitions to 'failed'",
+        "Failure reason extracted and displayed in run detail",
+        "Typecheck passes"
+      ],
+      "priority": 39,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-40",
+      "title": "View active agent session",
+      "description": "As a user, I can see when an agent session is active for my project.",
+      "acceptanceCriteria": [
+        "Active agent indicator (green dot) in project header",
+        "Shows uptime, current iteration number, resource type",
+        "Indicator disappears when no active session",
+        "Typecheck passes"
+      ],
+      "priority": 40,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-41",
+      "title": "Auto spin-down after idle timeout",
+      "description": "As a user, agent sessions automatically spin down after an idle timeout.",
+      "acceptanceCriteria": [
+        "CloudWatch idle metric triggers scale-to-zero",
+        "Timeout configurable per project (default 15 min)",
+        "Status transitions to 'scaled down' in UI",
+        "Typecheck passes"
+      ],
+      "priority": 41,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-42",
+      "title": "Manually stop an agent session",
+      "description": "As a user, I can manually stop an agent session so I can immediately halt activity.",
+      "acceptanceCriteria": [
+        "'Stop Agent' button in project header when agent is active",
+        "Sends terminate signal to ECS task",
+        "ECS task stopped; status transitions to 'terminated'",
+        "Confirmation dialog before stopping",
+        "Typecheck passes"
+      ],
+      "priority": 42,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-43",
+      "title": "Configure idle timeout",
+      "description": "As a user, I can configure the idle timeout in project settings.",
+      "acceptanceCriteria": [
+        "Slider in project settings (5–60 minutes)",
+        "Default: 15 minutes",
+        "Persists per project in MongoDB",
+        "Changes apply to next agent session",
+        "Typecheck passes"
+      ],
+      "priority": 43,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-44",
+      "title": "Audit log",
+      "description": "As a user, I can see an audit log of key changes and runs so I can review sensitive actions.",
+      "acceptanceCriteria": [
+        "Audit log page accessible from project settings",
+        "Filterable by action type (key change, run start, config update)",
+        "Each entry shows: timestamp, user, action type, target resource",
+        "Paginated with 50 entries per page",
+        "Typecheck passes"
+      ],
+      "priority": 44,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-45",
+      "title": "Secret redaction in logs",
+      "description": "As a user, secrets are redacted from logs so I don't accidentally expose credentials.",
+      "acceptanceCriteria": [
+        "Log processing pipeline scans for patterns: API keys, passwords, AWS keys, tokens",
+        "Matched patterns replaced with [REDACTED]",
+        "Redaction applies to both stored logs and real-time stream",
+        "Typecheck passes"
+      ],
+      "priority": 45,
+      "passes": false,
+      "notes": "Security-critical. Regex patterns for known key formats."
+    },
+    {
+      "id": "US-46",
+      "title": "Send message to agent session (deepagentsjs)",
+      "description": "As a user, I can send a minimal message to an agent session so I can request an update or small task.",
+      "acceptanceCriteria": [
+        "POST /api/v1/agents/:id/messages endpoint",
+        "Delivers message to running agent",
+        "Returns 200 with acknowledgment and message_id",
+        "Message appears in run thread",
+        "Typecheck passes"
+      ],
+      "priority": 46,
+      "passes": false,
+      "notes": "Optional/later phase. deepagentsjs subagent protocol."
+    },
+    {
+      "id": "US-47",
+      "title": "Receive streamed responses (deepagentsjs)",
+      "description": "As a user, I can receive streamed or incremental responses so I can follow along.",
+      "acceptanceCriteria": [
+        "WebSocket endpoint at /api/v1/agents/:id/stream",
+        "Chunked iteration output in real-time",
+        "Reconnection with message replay on disconnect",
+        "Typecheck passes"
+      ],
+      "priority": 47,
+      "passes": false,
+      "notes": "Optional/later phase. deepagentsjs subagent protocol."
+    },
+    {
+      "id": "US-48",
+      "title": "Extensible subagent provider registry",
+      "description": "As a developer, I can add a new subagent provider to the registry so the system is extensible.",
+      "acceptanceCriteria": [
+        "Provider registry config file (JSON/TypeScript)",
+        "Add provider with name, endpoint URL, auth scheme",
+        "Platform discovers new providers on restart",
+        "New providers appear in provider selection dropdowns",
+        "Typecheck passes"
+      ],
+      "priority": 48,
+      "passes": false,
+      "notes": "Optional/later phase. Extensibility feature."
+    }
+  ]
+}
