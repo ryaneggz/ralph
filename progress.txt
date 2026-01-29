@@ -926,3 +926,20 @@
   - Patterns use lookbehind assertions for context-aware matching (e.g., key=VALUE)
   - REDACTED constant is "[REDACTED]" — consistent replacement marker
 ---
+
+## 2026-01-29 - US-46
+- Implemented POST /api/v1/agents/:id/messages endpoint for sending messages to active agent sessions
+- Endpoint validates run is active (queued/running), appends message to emailMessages array and logs
+- Returns 200 with message_id, status, run_id, and timestamp
+- Added message compose input to RunDetailView (visible only for active runs)
+- Messages appear in email thread as outbound "User message" entries and in logs with [USER] prefix
+- Files changed:
+  - src/app/api/v1/agents/[id]/messages/route.ts (new - deepagentsjs message endpoint)
+  - src/components/run-detail-view.tsx (updated - added send message form for active runs)
+  - prd.json (updated - US-46 passes: true)
+- **Learnings for future iterations:**
+  - deepagentsjs protocol endpoints live at /api/v1/agents/[id]/* — separate from project-scoped API
+  - Agent ID in deepagentsjs context maps to run ID (the agent session)
+  - Messages to agents stored as outbound emailMessages + logged with [USER] prefix
+  - Only active runs (queued/running) accept messages — returns 400 for terminal states
+---

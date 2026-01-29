@@ -87,6 +87,8 @@ export function RunDetailView({
   const [autoScroll, setAutoScroll] = useState(true);
   const [canceling, setCanceling] = useState(false);
   const [rerunning, setRerunning] = useState(false);
+  const [messageText, setMessageText] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   const isActive = run.status === "queued" || run.status === "running";
   const isTerminal = run.status === "succeeded" || run.status === "failed" || run.status === "canceled";
@@ -301,6 +303,51 @@ export function RunDetailView({
               No messages in thread yet.
             </p>
           )}
+        </div>
+      )}
+
+      {/* Send message to agent */}
+      {isActive && (
+        <div className="border rounded-lg p-4 bg-muted/30">
+          <h3 className="text-sm font-semibold mb-2">Send Message to Agent</h3>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (!messageText.trim() || sendingMessage) return;
+              setSendingMessage(true);
+              try {
+                const res = await fetch(`/api/v1/agents/${runId}/messages`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ message: messageText.trim() }),
+                });
+                if (res.ok) {
+                  setMessageText("");
+                  await fetchRun();
+                }
+              } catch {
+                // ignore
+              } finally {
+                setSendingMessage(false);
+              }
+            }}
+            className="flex gap-2"
+          >
+            <input
+              type="text"
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+              placeholder="Send a message or request to the agent..."
+              className="flex-1 rounded-md border bg-background px-3 py-2 text-sm"
+            />
+            <button
+              type="submit"
+              disabled={!messageText.trim() || sendingMessage}
+              className="px-4 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {sendingMessage ? "Sending..." : "Send"}
+            </button>
+          </form>
         </div>
       )}
 
