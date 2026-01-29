@@ -2,11 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-const PROVIDERS = [
-  { key: "claude-code", label: "Claude Code (Anthropic)" },
-  { key: "codeex", label: "Codeex" },
-  { key: "opencode", label: "OpenCode" },
-] as const;
+import { getProviderOptions } from "@/lib/provider-registry";
+
+const PROVIDERS = getProviderOptions();
 
 interface RunProviderSelectorProps {
   projectId: string;

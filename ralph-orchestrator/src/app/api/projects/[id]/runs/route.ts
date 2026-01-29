@@ -5,9 +5,9 @@ import { connectDB } from "@/lib/db";
 import { Project } from "@/lib/models/project";
 import { Run } from "@/lib/models/run";
 import { sendRalphEmail } from "@/lib/ralph-email";
+import { isValidProvider } from "@/lib/provider-registry";
 
 const VALID_TYPES = ["plan", "apply", "destroy"];
-const VALID_PROVIDERS = ["claude-code", "codeex", "opencode"];
 
 export async function POST(
   request: NextRequest,
@@ -26,7 +26,7 @@ export async function POST(
     return NextResponse.json({ error: "Invalid run type" }, { status: 400 });
   }
 
-  if (!provider || !VALID_PROVIDERS.includes(provider)) {
+  if (!provider || !isValidProvider(provider)) {
     return NextResponse.json({ error: "Invalid provider" }, { status: 400 });
   }
 

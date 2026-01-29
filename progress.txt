@@ -31,6 +31,7 @@
 - IaC templates defined in src/lib/iac-templates.ts — IAC_TEMPLATE_IDS for validation, IAC_TEMPLATES for display
 - SSE streaming via ReadableStream + text/event-stream for real-time updates (Next.js App Router has no native WebSocket)
 - ProviderKeyForm component is reusable for all providers (claude-code, codeex, opencode)
+- Provider registry at src/lib/provider-registry.ts — single source of truth for all providers; add new providers there
 - Project-level mutations (rename, delete, config) use /api/projects/[id] route with PATCH/DELETE methods
 - AWS regions list shared via src/lib/aws-regions.ts — use for any AWS region dropdowns/validation
 ---
@@ -964,4 +965,34 @@
   - SSE events use `event:`, `data:`, `id:` fields separated by double newlines
   - Use request.signal.addEventListener("abort") to detect client disconnect in streaming routes
   - For real-time updates, SSE is preferred over polling in Next.js (no native WebSocket in App Router)
+---
+
+## 2026-01-29 - US-48
+- Implemented extensible subagent provider registry at src/lib/provider-registry.ts
+- Created ProviderDefinition interface with id, name, endpointUrl, authScheme, keyPrefix, keyPlaceholder
+- Central PROVIDER_REGISTRY array replaces all hardcoded provider lists
+- Exported helpers: PROVIDER_IDS, getProvider(), isValidProvider(), getProviderOptions(), validateKeyFormat()
+- Updated all consumers to use registry:
+  - /api/projects/[id]/provider-keys/route.ts — uses isValidProvider() and PROVIDER_IDS
+  - /api/projects/[id]/runs/route.ts — uses isValidProvider()
+  - /api/projects/[id]/route.ts — uses isValidProvider() for defaultProvider validation
+  - src/components/run-provider-selector.tsx — uses getProviderOptions()
+  - src/components/provider-key-form.tsx — uses validateKeyFormat()
+  - src/app/projects/[id]/page.tsx — uses getProviderOptions()
+  - src/app/projects/[id]/settings/page.tsx — dynamically renders ProviderKeyForm from PROVIDER_REGISTRY
+- Files changed:
+  - src/lib/provider-registry.ts (new)
+  - src/app/api/projects/[id]/provider-keys/route.ts (updated)
+  - src/app/api/projects/[id]/runs/route.ts (updated)
+  - src/app/api/projects/[id]/route.ts (updated)
+  - src/components/run-provider-selector.tsx (updated)
+  - src/components/provider-key-form.tsx (updated)
+  - src/app/projects/[id]/page.tsx (updated)
+  - src/app/projects/[id]/settings/page.tsx (updated)
+  - prd.json (updated - US-48 passes: true)
+- **Learnings for future iterations:**
+  - Provider registry at src/lib/provider-registry.ts is the single source of truth for all providers
+  - To add a new provider: add entry to PROVIDER_REGISTRY array — all UI and API validation auto-discovers it
+  - ProviderDefinition includes endpointUrl and authScheme for future runtime provider integration
+  - validateKeyFormat() returns error string or null — used by provider-key-form.tsx for client-side validation
 ---

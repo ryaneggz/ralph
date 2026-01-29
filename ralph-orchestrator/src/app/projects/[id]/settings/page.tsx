@@ -13,6 +13,7 @@ import { AwsAuthForm } from "@/components/aws-auth-form";
 import { IacTemplateSelector } from "@/components/iac-template-selector";
 import { IdleTimeoutForm } from "@/components/idle-timeout-form";
 import Link from "next/link";
+import { PROVIDER_REGISTRY } from "@/lib/provider-registry";
 
 export default async function ProjectSettingsPage({
   params,
@@ -89,27 +90,16 @@ export default async function ProjectSettingsPage({
         <section className="mt-8">
           <h3 className="text-lg font-semibold mb-4">Provider API Keys</h3>
           <div className="space-y-4">
-            <ProviderKeyForm
-              projectId={id}
-              provider="claude-code"
-              label="Claude Code (Anthropic)"
-              placeholder="sk-ant-..."
-              initialData={providerKeysMap.get("claude-code") ?? null}
-            />
-            <ProviderKeyForm
-              projectId={id}
-              provider="codeex"
-              label="Codeex"
-              placeholder="codeex-..."
-              initialData={providerKeysMap.get("codeex") ?? null}
-            />
-            <ProviderKeyForm
-              projectId={id}
-              provider="opencode"
-              label="OpenCode"
-              placeholder="opencode-..."
-              initialData={providerKeysMap.get("opencode") ?? null}
-            />
+            {PROVIDER_REGISTRY.map((p) => (
+              <ProviderKeyForm
+                key={p.id}
+                projectId={id}
+                provider={p.id}
+                label={p.name}
+                placeholder={p.keyPlaceholder}
+                initialData={providerKeysMap.get(p.id) ?? null}
+              />
+            ))}
           </div>
         </section>
 

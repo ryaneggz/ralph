@@ -5,9 +5,7 @@ import { Project } from "@/lib/models/project";
 import type { IProviderKey } from "@/lib/models/project";
 import { encrypt, isEncryptionConfigured } from "@/lib/crypto";
 import { logAudit } from "@/lib/models/audit-log";
-
-const VALID_PROVIDERS = ["claude-code", "codeex", "opencode"] as const;
-type Provider = (typeof VALID_PROVIDERS)[number];
+import { PROVIDER_IDS, isValidProvider } from "@/lib/provider-registry";
 
 function maskKey(value: string): string {
   if (value.length <= 8) return "••••••••";
@@ -61,9 +59,9 @@ export async function PUT(
   const body = await request.json();
   const { provider, apiKey } = body as { provider: string; apiKey: string };
 
-  if (!provider || !VALID_PROVIDERS.includes(provider as Provider)) {
+  if (!provider || !isValidProvider(provider)) {
     return NextResponse.json(
-      { error: `Invalid provider. Must be one of: ${VALID_PROVIDERS.join(", ")}` },
+      { error: `Invalid provider. Must be one of: ${PROVIDER_IDS.join(", ")}` },
       { status: 400 }
     );
   }

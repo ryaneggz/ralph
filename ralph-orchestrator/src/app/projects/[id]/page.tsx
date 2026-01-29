@@ -10,12 +10,7 @@ import { PromptMdViewer } from "@/components/prompt-md-viewer";
 import { RunProviderSelector } from "@/components/run-provider-selector";
 import { RunActions } from "@/components/run-actions";
 import { ActiveAgentIndicator } from "@/components/active-agent-indicator";
-
-const PROVIDERS = [
-  { key: "claude-code", label: "Claude Code (Anthropic)" },
-  { key: "codeex", label: "Codeex" },
-  { key: "opencode", label: "OpenCode" },
-] as const;
+import { getProviderOptions } from "@/lib/provider-registry";
 
 export default async function ProjectPage({
   params,
@@ -38,6 +33,8 @@ export default async function ProjectPage({
   if (!project) {
     redirect("/inbox");
   }
+
+  const PROVIDERS = getProviderOptions();
 
   return (
     <AppShell>

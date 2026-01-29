@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { validateKeyFormat } from "@/lib/provider-registry";
 
 interface ProviderKeyData {
   provider: string;
@@ -77,19 +78,10 @@ export function ProviderKeyForm({
     const keyToTest = apiKey.trim() || "";
 
     if (keyToTest) {
-      // Basic format validation per provider
-      if (provider === "claude-code" && !keyToTest.startsWith("sk-ant-")) {
-        setMessage({ type: "error", text: "Invalid key format. Claude Code keys start with sk-ant-" });
-        setTesting(false);
-        return;
-      }
-      if (provider === "codeex" && !keyToTest.startsWith("codeex-")) {
-        setMessage({ type: "error", text: "Invalid key format. Codeex keys start with codeex-" });
-        setTesting(false);
-        return;
-      }
-      if (provider === "opencode" && !keyToTest.startsWith("opencode-")) {
-        setMessage({ type: "error", text: "Invalid key format. OpenCode keys start with opencode-" });
+      // Format validation via provider registry
+      const formatError = validateKeyFormat(provider, keyToTest);
+      if (formatError) {
+        setMessage({ type: "error", text: formatError });
         setTesting(false);
         return;
       }

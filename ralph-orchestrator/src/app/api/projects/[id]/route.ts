@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import { Project } from "@/lib/models/project";
 import { AWS_REGIONS } from "@/lib/aws-regions";
 import { IAC_TEMPLATE_IDS } from "@/lib/iac-templates";
+import { isValidProvider } from "@/lib/provider-registry";
 
 export async function PATCH(
   request: NextRequest,
@@ -48,8 +49,7 @@ export async function PATCH(
   }
 
   if (defaultProvider !== undefined) {
-    const validProviders = ["claude-code", "codeex", "opencode"];
-    if (typeof defaultProvider !== "string" || !validProviders.includes(defaultProvider)) {
+    if (typeof defaultProvider !== "string" || !isValidProvider(defaultProvider)) {
       return NextResponse.json({ error: "Invalid provider" }, { status: 400 });
     }
     update.defaultProvider = defaultProvider;

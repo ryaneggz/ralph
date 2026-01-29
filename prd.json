@@ -737,7 +737,7 @@
         "Typecheck passes"
       ],
       "priority": 50,
-      "passes": false,
+      "passes": true,
       "notes": "Optional/later phase. Extensibility feature."
     }
   ]
