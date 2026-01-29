@@ -348,3 +348,23 @@
   - Secret access keys encrypted same way as provider keys and env vars (AES-256-GCM)
   - Radio buttons for mutually exclusive auth type selection (role vs access-keys)
 ---
+
+## 2026-01-29 - US-17
+- Implemented AWS connectivity test via STS GetCallerIdentity
+- Created POST /api/projects/[id]/aws-auth/test endpoint
+- For access-keys: decrypts stored secret, creates STS client with credentials, calls GetCallerIdentity
+- For role: assumes role via AssumeRole, then calls GetCallerIdentity with assumed credentials
+- Added "Test Connection" button to AwsAuthForm with loading state
+- Shows AWS Account ID on success, error message on failure
+- Installed @aws-sdk/client-sts package
+- Files changed:
+  - src/app/api/projects/[id]/aws-auth/test/route.ts (new)
+  - src/components/aws-auth-form.tsx (updated - added Test Connection button)
+  - ralph-orchestrator/package.json (updated - added @aws-sdk/client-sts)
+  - prd.json (updated - US-17 passes: true)
+- **Learnings for future iterations:**
+  - @aws-sdk/client-sts is the AWS SDK v3 package for STS operations
+  - For role-based auth, need AssumeRole first then use temporary credentials for GetCallerIdentity
+  - decrypt() from crypto.ts recovers the stored secret access key for runtime use
+  - Test endpoint is a separate route at /aws-auth/test to keep concerns separated from CRUD
+---

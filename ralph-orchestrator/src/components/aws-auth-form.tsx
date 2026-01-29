@@ -28,6 +28,7 @@ export function AwsAuthForm({ projectId, initialData }: AwsAuthFormProps) {
   const [accessKeyId, setAccessKeyId] = useState(initialData.accessKeyId ?? "");
   const [secretAccessKey, setSecretAccessKey] = useState("");
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const configured = initialData.configured;
@@ -88,6 +89,29 @@ export function AwsAuthForm({ projectId, initialData }: AwsAuthFormProps) {
       setMessage({ type: "error", text: errorMessage });
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleTestConnection() {
+    setTesting(true);
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/aws-auth/test`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Connection test failed");
+      }
+      setMessage({
+        type: "success",
+        text: `Connection successful — AWS Account: ${data.accountId}`,
+      });
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Connection test failed";
+      setMessage({ type: "error", text: errorMessage });
+    } finally {
+      setTesting(false);
     }
   }
 
@@ -192,11 +216,16 @@ export function AwsAuthForm({ projectId, initialData }: AwsAuthFormProps) {
       </div>
 
       <div className="flex gap-2">
-        <Button onClick={handleSave} disabled={saving} size="sm">
+        <Button onClick={handleSave} disabled={saving || testing} size="sm">
           {saving ? "Saving..." : configured ? "Update Credentials" : "Save Credentials"}
         </Button>
         {configured && (
-          <Button onClick={handleDelete} disabled={saving} size="sm" variant="destructive">
+          <Button onClick={handleTestConnection} disabled={saving || testing} size="sm" variant="outline">
+            {testing ? "Testing..." : "Test Connection"}
+          </Button>
+        )}
+        {configured && (
+          <Button onClick={handleDelete} disabled={saving || testing} size="sm" variant="destructive">
             Remove
           </Button>
         )}
