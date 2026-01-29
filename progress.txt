@@ -558,3 +558,21 @@
   - Prompt editor page at /projects/[id]/prompt — linked from PromptMdViewer empty state
   - data-color-mode="light" attribute needed on MDEditor container for proper theming
 ---
+
+## 2026-01-29 - US-27
+- Implemented Reset PROMPT.md to default template with confirmation dialog
+- Created src/lib/default-prompt-template.ts with generateDefaultPromptMd() function
+- Added DELETE /api/projects/[id]/prompt-md endpoint that generates default template preserving repo URL and branch
+- Added "Reset to Default" button with inline confirmation to PromptMdEditor component
+- On reset: editor state (frontmatter + body) updated to reflect default content
+- Files changed:
+  - src/lib/default-prompt-template.ts (new - default template generator)
+  - src/app/api/projects/[id]/prompt-md/route.ts (updated - added DELETE handler)
+  - src/components/prompt-md-editor.tsx (updated - added reset button with confirmation)
+  - prd.json (updated - US-27 passes: true)
+- **Learnings for future iterations:**
+  - DELETE method on prompt-md route used for "reset to default" semantics (replaces with generated default)
+  - Default template preserves project.repo.url and project.repo.branch from existing project config
+  - Inline confirmation pattern reused from provider key delete (no modal needed)
+  - gray-matter re-parses returned default content to update frontmatter + body state separately
+---

@@ -29,6 +29,8 @@ export function PromptMdEditor({ projectId, initialContent }: PromptMdEditorProp
   const [frontmatter, setFrontmatter] = useState<Record<string, string>>(initialParsed.frontmatter);
   const [body, setBody] = useState(initialParsed.body);
   const [saving, setSaving] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   const assembledContent = useMemo(() => {
@@ -60,6 +62,36 @@ export function PromptMdEditor({ projectId, initialContent }: PromptMdEditorProp
       setFeedback({ type: "error", message: err instanceof Error ? err.message : "Failed to save" });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleReset = async () => {
+    setResetting(true);
+    setFeedback(null);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/prompt-md`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to reset");
+      }
+      const data = await res.json();
+      // Re-parse the default content and update state
+      try {
+        const { data: fm, content: newBody } = matter(data.promptMd);
+        setFrontmatter(fm as Record<string, string>);
+        setBody(newBody);
+      } catch {
+        setFrontmatter({});
+        setBody(data.promptMd);
+      }
+      setFeedback({ type: "success", message: "PROMPT.md reset to default template" });
+    } catch (err) {
+      setFeedback({ type: "error", message: err instanceof Error ? err.message : "Failed to reset" });
+    } finally {
+      setResetting(false);
+      setConfirmReset(false);
     }
   };
 
@@ -137,7 +169,7 @@ export function PromptMdEditor({ projectId, initialContent }: PromptMdEditorProp
         </div>
       </div>
 
-      {/* Save button + feedback */}
+      {/* Save button + Reset button + feedback */}
       <div className="flex items-center gap-3">
         <button
           onClick={handleSave}
@@ -146,6 +178,34 @@ export function PromptMdEditor({ projectId, initialContent }: PromptMdEditorProp
         >
           {saving ? "Saving…" : "Save PROMPT.md"}
         </button>
+        {!confirmReset ? (
+          <button
+            onClick={() => setConfirmReset(true)}
+            disabled={resetting}
+            className="rounded-md border border-destructive px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
+          >
+            Reset to Default
+          </button>
+        ) : (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              This will replace all content with the default template. Continue?
+            </span>
+            <button
+              onClick={handleReset}
+              disabled={resetting}
+              className="rounded-md bg-destructive px-3 py-1.5 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
+            >
+              {resetting ? "Resetting…" : "Confirm Reset"}
+            </button>
+            <button
+              onClick={() => setConfirmReset(false)}
+              className="rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-muted"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
         {feedback && (
           <span
             className={`text-sm ${feedback.type === "success" ? "text-green-600" : "text-red-600"}`}
