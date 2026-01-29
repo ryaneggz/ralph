@@ -104,6 +104,19 @@ export default async function ProjectPage({
               path: f.path,
               content: f.content,
             }))}
+            initialDraftFiles={
+              project.iacDraftFiles && project.iacDraftFiles.length > 0
+                ? project.iacDraftFiles.map((f: { path: string; content: string }) => ({
+                    path: f.path,
+                    content: f.content,
+                  }))
+                : null
+            }
+            initialDraftUpdatedAt={
+              project.iacDraftUpdatedAt
+                ? project.iacDraftUpdatedAt.toISOString()
+                : null
+            }
           />
         </section>
       </div>

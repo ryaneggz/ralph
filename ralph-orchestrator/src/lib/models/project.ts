@@ -44,6 +44,8 @@ export interface IProject extends Document {
   awsAuth?: IAwsAuth;
   iacTemplate?: string;
   iacFiles?: IIacFile[];
+  iacDraftFiles?: IIacFile[];
+  iacDraftUpdatedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -103,6 +105,11 @@ const ProjectSchema = new Schema<IProject>(
       type: [{ path: { type: String, required: true }, content: { type: String, required: true } }],
       default: [],
     },
+    iacDraftFiles: {
+      type: [{ path: { type: String, required: true }, content: { type: String, required: true } }],
+      default: undefined,
+    },
+    iacDraftUpdatedAt: { type: Date },
   },
   { timestamps: true }
 );

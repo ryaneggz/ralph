@@ -43,6 +43,8 @@ export async function PUT(
   }
 
   project.iacFiles = body.files;
+  project.iacDraftFiles = undefined;
+  project.iacDraftUpdatedAt = undefined;
   await project.save();
 
   return NextResponse.json({ files: project.iacFiles });
