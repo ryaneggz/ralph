@@ -27,6 +27,7 @@ interface RunDetail {
   threadId?: string | null;
   emailSubject?: string | null;
   emailMessages?: EmailMessage[];
+  failureReason?: string | null;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -107,6 +108,7 @@ export function RunDetailView({
           threadId: data.threadId ?? null,
           emailSubject: data.emailSubject ?? null,
           emailMessages: data.emailMessages ?? [],
+          failureReason: data.failureReason ?? null,
         });
       }
     } catch {
@@ -217,6 +219,18 @@ export function RunDetailView({
           </button>
         )}
       </div>
+
+      {/* Failure reason */}
+      {run.status === "failed" && run.failureReason && (
+        <div className="border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 rounded-lg p-4">
+          <h3 className="text-sm font-semibold text-red-800 dark:text-red-300 mb-1">
+            Failure Reason
+          </h3>
+          <p className="text-sm text-red-700 dark:text-red-400">
+            {run.failureReason}
+          </p>
+        </div>
+      )}
 
       {/* Email thread */}
       {run.threadId && (

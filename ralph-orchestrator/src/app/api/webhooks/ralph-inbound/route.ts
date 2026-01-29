@@ -35,6 +35,7 @@ export async function POST(request: NextRequest) {
     subject?: string;
     body?: string;
     runId?: string;
+    isError?: boolean;
   };
 
   try {
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { threadId, subject, body, runId } = payload;
+  const { threadId, subject, body, runId, isError } = payload;
 
   if (!body || typeof body !== "string") {
     return NextResponse.json(
@@ -95,6 +96,26 @@ export async function POST(request: NextRequest) {
   const bodyLines = body.split("\n");
   for (const line of bodyLines) {
     run.logs.push(`${logPrefix} [RALPH] ${line}`);
+  }
+
+  // Detect error emails and transition run status to failed
+  const ERROR_SUBJECT_PATTERNS = /\b(error|failed|failure|fatal|exception|panic|abort)\b/i;
+  const isErrorEmail =
+    isError === true ||
+    ERROR_SUBJECT_PATTERNS.test(emailSubject) ||
+    ERROR_SUBJECT_PATTERNS.test(body.slice(0, 500));
+
+  if (isErrorEmail && (run.status === "queued" || run.status === "running")) {
+    // Extract failure reason from subject or first non-empty body line
+    const failureReason =
+      subject && ERROR_SUBJECT_PATTERNS.test(subject)
+        ? subject
+        : bodyLines.find((l: string) => l.trim().length > 0)?.trim().slice(0, 500) || "Error reported by Ralph agent";
+
+    run.status = "failed";
+    run.failureReason = failureReason;
+    run.statusHistory.push({ status: "failed", timestamp: now });
+    run.logs.push(`${logPrefix} Run marked as failed — reason: ${failureReason}`);
   }
 
   await run.save();

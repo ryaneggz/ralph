@@ -22,6 +22,7 @@ export interface IRun extends Document {
   threadId: string | null;
   emailSubject: string | null;
   emailMessages: IEmailMessage[];
+  failureReason: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -41,6 +42,7 @@ const RunSchema = new Schema<IRun>(
     logs: { type: [String], default: [] },
     threadId: { type: String, default: null },
     emailSubject: { type: String, default: null },
+    failureReason: { type: String, default: null },
     emailMessages: {
       type: [
         {

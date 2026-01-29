@@ -789,3 +789,24 @@
   - Run lookup supports both threadId and runId for flexibility
   - WEBHOOK_SECRET is optional — if not set, endpoint is open (for development)
 ---
+
+## 2026-01-29 - US-39
+- Implemented email failure detection and automatic run status transition
+- Added `failureReason` field to Run model for storing extracted error reasons
+- Updated inbound webhook to detect error emails via: explicit `isError` flag, subject/body pattern matching
+- Error patterns matched: error, failed, failure, fatal, exception, panic, abort (case-insensitive)
+- Run status auto-transitions to "failed" when error email detected (only for queued/running runs)
+- Failure reason extracted from subject line or first non-empty body line (max 500 chars)
+- Added failure reason display in RunDetailView (red banner below status badge)
+- failureReason included in run detail polling for real-time updates
+- Files changed:
+  - src/lib/models/run.ts (updated - added failureReason field)
+  - src/app/api/webhooks/ralph-inbound/route.ts (updated - error detection + status transition)
+  - src/components/run-detail-view.tsx (updated - failureReason display + fetch)
+  - prd.json (updated - US-39 passes: true)
+- **Learnings for future iterations:**
+  - Webhook payload supports explicit `isError` boolean flag for programmatic error reporting
+  - Error detection also uses regex pattern matching on subject and first 500 chars of body
+  - Only queued/running runs transition to failed — terminal runs are not affected
+  - failureReason capped at 500 chars to prevent oversized UI display
+---
