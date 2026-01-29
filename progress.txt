@@ -576,3 +576,22 @@
   - Inline confirmation pattern reused from provider key delete (no modal needed)
   - gray-matter re-parses returned default content to update frontmatter + body state separately
 ---
+
+## 2026-01-29 - US-28
+- Implemented provider selection for runs with dropdown, disabled state for unconfigured providers, and warning when none configured
+- Added `defaultProvider` field to Project model
+- Extended PATCH /api/projects/[id] to accept and validate `defaultProvider`
+- Created RunProviderSelector client component with auto-save on selection change
+- Added "Run Provider" section to project workspace page (between Provider Status and PROMPT.md)
+- Files changed:
+  - src/lib/models/project.ts (updated - added defaultProvider field)
+  - src/app/api/projects/[id]/route.ts (updated - PATCH accepts defaultProvider)
+  - src/components/run-provider-selector.tsx (new)
+  - src/app/projects/[id]/page.tsx (updated - added Run Provider section)
+  - prd.json (updated - US-28 passes: true)
+- **Learnings for future iterations:**
+  - Provider selection auto-saves default on change via PATCH /api/projects/[id]
+  - Unconfigured providers shown as disabled options with "(Not Configured)" suffix
+  - No providers warning uses yellow border/bg pattern with link to settings
+  - Workspace page section order: Provider Status > Run Provider > PROMPT.md > Infrastructure as Code
+---

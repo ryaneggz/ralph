@@ -16,7 +16,7 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await request.json();
-  const { name, awsRegion, iacTemplate } = body;
+  const { name, awsRegion, iacTemplate, defaultProvider } = body;
 
   const update: Record<string, string> = {};
 
@@ -45,6 +45,14 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid IaC template" }, { status: 400 });
     }
     update.iacTemplate = iacTemplate;
+  }
+
+  if (defaultProvider !== undefined) {
+    const validProviders = ["claude-code", "codeex", "opencode"];
+    if (typeof defaultProvider !== "string" || !validProviders.includes(defaultProvider)) {
+      return NextResponse.json({ error: "Invalid provider" }, { status: 400 });
+    }
+    update.defaultProvider = defaultProvider;
   }
 
   if (Object.keys(update).length === 0) {

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { IacGenerateSection } from "@/components/iac-generate-section";
 import { IacVersionHistoryWrapper } from "@/components/iac-version-history-wrapper";
 import { PromptMdViewer } from "@/components/prompt-md-viewer";
+import { RunProviderSelector } from "@/components/run-provider-selector";
 
 const PROVIDERS = [
   { key: "claude-code", label: "Claude Code (Anthropic)" },
@@ -95,6 +96,17 @@ export default async function ProjectPage({
               Manage provider keys in settings
             </Link>
           </p>
+        </section>
+
+        <section className="mt-8">
+          <h3 className="text-lg font-semibold mb-3">Run Provider</h3>
+          <RunProviderSelector
+            projectId={id}
+            configuredProviders={(project.providerKeys ?? []).map(
+              (k: { provider: string }) => k.provider
+            )}
+            defaultProvider={project.defaultProvider ?? null}
+          />
         </section>
 
         <section className="mt-8">

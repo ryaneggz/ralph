@@ -55,6 +55,7 @@ export interface IProject extends Document {
   iacDraftUpdatedAt?: Date;
   iacVersions?: IIacVersion[];
   promptMd?: string;
+  defaultProvider?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -120,6 +121,7 @@ const ProjectSchema = new Schema<IProject>(
     },
     iacDraftUpdatedAt: { type: Date },
     promptMd: { type: String },
+    defaultProvider: { type: String },
     iacVersions: {
       type: [
         {
