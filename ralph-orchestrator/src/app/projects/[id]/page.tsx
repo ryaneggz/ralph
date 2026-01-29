@@ -5,6 +5,12 @@ import { Project } from "@/lib/models/project";
 import { AppShell } from "@/components/app-shell";
 import Link from "next/link";
 
+const PROVIDERS = [
+  { key: "claude-code", label: "Claude Code (Anthropic)" },
+  { key: "codeex", label: "Codeex" },
+  { key: "opencode", label: "OpenCode" },
+] as const;
+
 export default async function ProjectPage({
   params,
 }: {
@@ -47,6 +53,47 @@ export default async function ProjectPage({
             Project Settings
           </Link>
         </div>
+        <section className="mt-8">
+          <h3 className="text-lg font-semibold mb-3">Provider Status</h3>
+          <div className="space-y-2">
+            {PROVIDERS.map(({ key, label }) => {
+              const pk = (project.providerKeys ?? []).find(
+                (k: { provider: string; maskedValue: string }) => k.provider === key
+              );
+              const configured = !!pk;
+              return (
+                <div
+                  key={key}
+                  className="flex items-center justify-between rounded-md border p-3"
+                >
+                  <span className="text-sm font-medium">{label}</span>
+                  <div className="flex items-center gap-2">
+                    {configured && pk?.maskedValue && (
+                      <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
+                        {pk.maskedValue}
+                      </code>
+                    )}
+                    {configured ? (
+                      <span className="text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 px-2 py-0.5 rounded">
+                        Configured
+                      </span>
+                    ) : (
+                      <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded">
+                        Not Configured
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            <Link href={`/projects/${id}/settings`} className="text-primary hover:underline">
+              Manage provider keys in settings
+            </Link>
+          </p>
+        </section>
+
         <div className="mt-8">
           <p className="text-muted-foreground">
             Project workspace — runs, settings, and IaC will appear here.

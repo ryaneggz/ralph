@@ -242,3 +242,16 @@
   - Identical pattern to US-09: add ProviderKeyForm instance + format validation
   - All three providers now configured: claude-code, codeex, opencode
 ---
+
+## 2026-01-29 - US-11
+- Added provider configuration status summary to project workspace page
+- Shows all three providers with Configured/Not Configured badges and masked key values
+- Links to settings page for key management
+- Existing ProviderKeyForm already had status badges and masked display; this adds a read-only overview on the workspace
+- Files changed:
+  - src/app/projects/[id]/page.tsx (updated - added Provider Status section)
+  - prd.json (updated - US-11 passes: true)
+- **Learnings for future iterations:**
+  - Provider status overview on workspace page complements the editable forms on settings page
+  - project.providerKeys array can be accessed directly in server components without API call
+---
