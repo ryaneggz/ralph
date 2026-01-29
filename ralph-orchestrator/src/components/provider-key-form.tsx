@@ -32,6 +32,8 @@ export function ProviderKeyForm({
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [rotating, setRotating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   async function handleSave() {
@@ -99,6 +101,35 @@ export function ProviderKeyForm({
     setTesting(false);
   }
 
+  async function handleDelete() {
+    setDeleting(true);
+    setMessage(null);
+
+    try {
+      const res = await fetch(`/api/projects/${projectId}/provider-keys`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setMessage({ type: "error", text: data.error || "Failed to delete key" });
+        return;
+      }
+
+      setConfigured(false);
+      setMaskedValue("");
+      setApiKey("");
+      setConfirmDelete(false);
+      setMessage({ type: "success", text: "API key deleted successfully" });
+    } catch {
+      setMessage({ type: "error", text: "Failed to delete key" });
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <div className="space-y-3 rounded-md border p-4">
       <div className="flex items-center justify-between">
@@ -121,23 +152,52 @@ export function ProviderKeyForm({
       )}
 
       {configured && !rotating ? (
-        <div className="flex gap-2">
-          <Button
-            onClick={() => { setRotating(true); setMessage(null); }}
-            variant="outline"
-            size="sm"
-          >
-            Rotate
-          </Button>
-          <Button
-            onClick={handleTestConnection}
-            disabled={testing}
-            variant="outline"
-            size="sm"
-          >
-            {testing ? "Testing..." : "Test"}
-          </Button>
-        </div>
+        confirmDelete ? (
+          <div className="flex items-center gap-2">
+            <p className="text-sm text-destructive">Delete this key? This cannot be undone.</p>
+            <Button
+              onClick={handleDelete}
+              disabled={deleting}
+              variant="destructive"
+              size="sm"
+            >
+              {deleting ? "Deleting..." : "Confirm Delete"}
+            </Button>
+            <Button
+              onClick={() => { setConfirmDelete(false); setMessage(null); }}
+              variant="ghost"
+              size="sm"
+            >
+              Cancel
+            </Button>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <Button
+              onClick={() => { setRotating(true); setMessage(null); }}
+              variant="outline"
+              size="sm"
+            >
+              Rotate
+            </Button>
+            <Button
+              onClick={handleTestConnection}
+              disabled={testing}
+              variant="outline"
+              size="sm"
+            >
+              {testing ? "Testing..." : "Test"}
+            </Button>
+            <Button
+              onClick={() => { setConfirmDelete(true); setMessage(null); }}
+              variant="outline"
+              size="sm"
+              className="text-destructive hover:text-destructive"
+            >
+              Delete
+            </Button>
+          </div>
+        )
       ) : (
         <div className="flex gap-2">
           <Input

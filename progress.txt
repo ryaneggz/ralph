@@ -268,3 +268,17 @@
   - Rotate is functionally identical to Replace — same PUT endpoint, just different UX flow
   - The rotating state hides the input until user explicitly clicks Rotate, reducing accidental overwrites
 ---
+
+## 2026-01-29 - US-13
+- Added Delete button with confirmation dialog to ProviderKeyForm component
+- When configured: shows Delete button alongside Rotate and Test
+- Clicking Delete shows inline confirmation with "Confirm Delete" and "Cancel" buttons
+- On confirm: calls DELETE /api/projects/[id]/provider-keys endpoint (already existed)
+- Provider status reverts to "Not Configured" after deletion
+- Files changed:
+  - src/components/provider-key-form.tsx (updated - added delete confirmation flow)
+  - prd.json (updated - US-13 passes: true)
+- **Learnings for future iterations:**
+  - DELETE endpoint for provider keys already existed from US-08 implementation
+  - Inline confirmation pattern (no modal) keeps the UX lightweight for single-action destructive operations
+---
