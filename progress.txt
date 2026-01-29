@@ -12,6 +12,11 @@
 - SessionProvider wrapper lives in src/components/session-provider.tsx (client component)
 - UserMenu component uses useSession() from next-auth/react for client-side session access
 - Root layout wraps children with AuthSessionProvider for client-side session access
+- AppShell component provides shared layout (header + sidebar + main content area)
+- Sidebar fetches projects from /api/projects on each pathname change
+- Project model in src/lib/models/project.ts (Mongoose)
+- Projects API at /api/projects (GET list, POST create)
+- Middleware matcher must include /projects/:path* for auth protection
 ---
 
 ## 2026-01-28 - US-01
@@ -59,5 +64,34 @@
   - next-auth/react `signOut({ callbackUrl: "/login" })` handles JWT invalidation and redirect
   - `useSession()` requires SessionProvider ancestor - wrapped in root layout
   - UserMenu is a client component; inbox page is a server component that renders it
+---
+
+## 2026-01-28 - US-04
+- Implemented project creation with sidebar, dialog form, API, and workspace page
+- Created Project Mongoose model with userId, name, description, repoUrl fields
+- Created /api/projects route with POST (create) and GET (list by user)
+- Built Sidebar component with project list and "New Project" button
+- Built NewProjectDialog with name (required), description (optional), repoUrl (optional)
+- Created AppShell component (header + sidebar + main content)
+- Created /projects/[id] workspace page showing project details
+- Updated inbox page to use AppShell layout
+- Updated middleware matcher to protect /projects routes
+- Added shadcn dialog and textarea components
+- Files changed:
+  - src/lib/models/project.ts (new)
+  - src/app/api/projects/route.ts (new)
+  - src/components/sidebar.tsx (new)
+  - src/components/new-project-dialog.tsx (new)
+  - src/components/app-shell.tsx (new)
+  - src/app/projects/[id]/page.tsx (new)
+  - src/app/inbox/page.tsx (updated - uses AppShell)
+  - src/middleware.ts (updated - added /projects matcher)
+  - src/components/ui/dialog.tsx (new - shadcn)
+  - src/components/ui/textarea.tsx (new - shadcn)
+- **Learnings for future iterations:**
+  - AppShell wraps authenticated pages with header + sidebar layout
+  - Sidebar re-fetches project list on pathname change (useEffect dep on pathname)
+  - Next.js 15 params are Promises — must await them in page components
+  - Project pages check userId ownership before rendering
 ---
 

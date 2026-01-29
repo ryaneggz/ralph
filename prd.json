@@ -46,7 +46,7 @@
         "Typecheck passes"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -55,14 +55,49 @@
       "description": "As a user, I can create a project so I can group settings, prompts, and runs.",
       "acceptanceCriteria": [
         "'New Project' button in sidebar",
-        "Form with name (required) and description (optional)",
+        "Form with name (required), description (optional), and repository URL (optional)",
         "Project created in MongoDB with userId reference",
         "Redirects to new project workspace",
         "Typecheck passes"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": "Projects scope all downstream features (keys, IaC, runs)."
+    },
+    {
+      "id": "US-04a",
+      "title": "Configure repository for a project",
+      "description": "As a user, I can configure a Git repository for my project so agents clone and work on the correct codebase.",
+      "acceptanceCriteria": [
+        "Repository settings section in project settings page",
+        "Fields: repo URL (required), branch (default: main), access token (optional, for private repos)",
+        "Access token encrypted via AWS Secrets Manager on save",
+        "Validate repo URL format (HTTPS Git URL)",
+        "Test clone button that verifies repo is accessible with provided credentials",
+        "Saved to project.repo in MongoDB",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": "Repo config is project-scoped. Access token stored in Secrets Manager at /ralph/{userId}/projects/{projectId}/repo-token. IaC provisioning must clone this repo into the agent container on startup."
+    },
+    {
+      "id": "US-04b",
+      "title": "Configure agent environment variables",
+      "description": "As a user, I can configure environment variables for my project's agents so they have the credentials and config they need at runtime.",
+      "acceptanceCriteria": [
+        "Agent env vars section in project settings page",
+        "Add/edit/delete custom key-value pairs",
+        "Values encrypted via AWS Secrets Manager on save",
+        "Platform auto-injects configured provider API keys (marked as source: platform)",
+        "User-defined vars (source: user) can override platform vars",
+        "Preview of merged env vars shown before save (values masked)",
+        "Env vars injected into ECS task definition at agent provisioning time",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": "Project-scoped. Platform auto-populates provider keys (e.g., ANTHROPIC_API_KEY from Claude Code provider config). User can add custom vars for their codebase (e.g., DATABASE_URL, CUSTOM_FLAG). All values stored encrypted. Merged set injected into agent container as environment variables."
     },
     {
       "id": "US-05",
@@ -74,7 +109,7 @@
         "Validation: non-empty, max 100 chars",
         "Typecheck passes"
       ],
-      "priority": 5,
+      "priority": 7,
       "passes": false,
       "notes": ""
     },
@@ -90,7 +125,7 @@
         "Redirects to project list after deletion",
         "Typecheck passes"
       ],
-      "priority": 6,
+      "priority": 8,
       "passes": false,
       "notes": ""
     },
@@ -104,7 +139,7 @@
         "Last-used project ID stored in localStorage",
         "Typecheck passes"
       ],
-      "priority": 7,
+      "priority": 9,
       "passes": false,
       "notes": ""
     },
@@ -119,7 +154,7 @@
         "Success/error feedback toast",
         "Typecheck passes"
       ],
-      "priority": 8,
+      "priority": 10,
       "passes": false,
       "notes": "Keys stored at /ralph/{userId}/keys/{provider} in Secrets Manager."
     },
@@ -132,7 +167,7 @@
         "Provider-specific validation endpoint",
         "Typecheck passes"
       ],
-      "priority": 9,
+      "priority": 11,
       "passes": false,
       "notes": ""
     },
@@ -145,7 +180,7 @@
         "Provider-specific validation endpoint",
         "Typecheck passes"
       ],
-      "priority": 10,
+      "priority": 12,
       "passes": false,
       "notes": ""
     },
@@ -159,7 +194,7 @@
         "Full key never returned by API",
         "Typecheck passes"
       ],
-      "priority": 11,
+      "priority": 13,
       "passes": false,
       "notes": ""
     },
@@ -173,7 +208,7 @@
         "Running agents unaffected until next loop iteration",
         "Typecheck passes"
       ],
-      "priority": 12,
+      "priority": 14,
       "passes": false,
       "notes": ""
     },
@@ -187,7 +222,7 @@
         "Provider status reverts to 'Not Configured'",
         "Typecheck passes"
       ],
-      "priority": 13,
+      "priority": 15,
       "passes": false,
       "notes": ""
     },
@@ -202,7 +237,7 @@
         "No plaintext key in browser network tab responses",
         "Typecheck passes"
       ],
-      "priority": 14,
+      "priority": 16,
       "passes": false,
       "notes": "Security-critical. Verify with integration test."
     },
@@ -216,7 +251,7 @@
         "Default: us-east-1",
         "Typecheck passes"
       ],
-      "priority": 15,
+      "priority": 17,
       "passes": false,
       "notes": ""
     },
@@ -232,7 +267,7 @@
         "Least-privilege IAM role template link provided",
         "Typecheck passes"
       ],
-      "priority": 16,
+      "priority": 18,
       "passes": false,
       "notes": ""
     },
@@ -247,7 +282,7 @@
         "Loading state during test",
         "Typecheck passes"
       ],
-      "priority": 17,
+      "priority": 19,
       "passes": false,
       "notes": ""
     },
@@ -262,7 +297,7 @@
         "Running agents unaffected",
         "Typecheck passes"
       ],
-      "priority": 18,
+      "priority": 20,
       "passes": false,
       "notes": ""
     },
@@ -276,7 +311,7 @@
         "Selection saved to project config",
         "Typecheck passes"
       ],
-      "priority": 19,
+      "priority": 21,
       "passes": false,
       "notes": ""
     },
@@ -290,7 +325,7 @@
         "Viewable immediately after generation",
         "Typecheck passes"
       ],
-      "priority": 20,
+      "priority": 22,
       "passes": false,
       "notes": ""
     },
@@ -304,7 +339,7 @@
         "File tree sidebar if multiple files",
         "Typecheck passes"
       ],
-      "priority": 21,
+      "priority": 23,
       "passes": false,
       "notes": ""
     },
@@ -319,7 +354,7 @@
         "Save button with success/error feedback",
         "Typecheck passes"
       ],
-      "priority": 22,
+      "priority": 24,
       "passes": false,
       "notes": ""
     },
@@ -334,7 +369,7 @@
         "Drafts persist across sessions in MongoDB",
         "Typecheck passes"
       ],
-      "priority": 23,
+      "priority": 25,
       "passes": false,
       "notes": ""
     },
@@ -348,7 +383,7 @@
         "Restore previous version button",
         "Typecheck passes"
       ],
-      "priority": 24,
+      "priority": 26,
       "passes": false,
       "notes": ""
     },
@@ -362,7 +397,7 @@
         "Syntax highlighting for code blocks",
         "Typecheck passes"
       ],
-      "priority": 25,
+      "priority": 27,
       "passes": false,
       "notes": ""
     },
@@ -377,7 +412,7 @@
         "Save persists to project in MongoDB",
         "Typecheck passes"
       ],
-      "priority": 26,
+      "priority": 28,
       "passes": false,
       "notes": "Use @uiw/react-md-editor or similar."
     },
@@ -391,7 +426,7 @@
         "Preserves project-specific variables (repo URL, branch)",
         "Typecheck passes"
       ],
-      "priority": 27,
+      "priority": 29,
       "passes": false,
       "notes": ""
     },
@@ -406,7 +441,7 @@
         "Selection persists as default for project",
         "Typecheck passes"
       ],
-      "priority": 28,
+      "priority": 30,
       "passes": false,
       "notes": ""
     },
@@ -422,7 +457,7 @@
         "Status transitions: queued → running → succeeded/failed",
         "Typecheck passes"
       ],
-      "priority": 29,
+      "priority": 31,
       "passes": false,
       "notes": ""
     },
@@ -438,7 +473,7 @@
         "Status transitions: queued → running → succeeded/failed",
         "Typecheck passes"
       ],
-      "priority": 30,
+      "priority": 32,
       "passes": false,
       "notes": ""
     },
@@ -454,7 +489,7 @@
         "Status transitions: queued → running → succeeded/failed",
         "Typecheck passes"
       ],
-      "priority": 31,
+      "priority": 33,
       "passes": false,
       "notes": ""
     },
@@ -468,7 +503,7 @@
         "Status history timeline in run detail view",
         "Typecheck passes"
       ],
-      "priority": 32,
+      "priority": 34,
       "passes": false,
       "notes": ""
     },
@@ -483,7 +518,7 @@
         "Downloadable as .txt file",
         "Typecheck passes"
       ],
-      "priority": 33,
+      "priority": 35,
       "passes": false,
       "notes": ""
     },
@@ -498,7 +533,7 @@
         "Partial changes noted in log",
         "Typecheck passes"
       ],
-      "priority": 34,
+      "priority": 36,
       "passes": false,
       "notes": ""
     },
@@ -513,7 +548,7 @@
         "New run appears in run list",
         "Typecheck passes"
       ],
-      "priority": 35,
+      "priority": 37,
       "passes": false,
       "notes": ""
     },
@@ -528,7 +563,7 @@
         "Thread ID stored on run record",
         "Typecheck passes"
       ],
-      "priority": 36,
+      "priority": 38,
       "passes": false,
       "notes": ""
     },
@@ -542,7 +577,7 @@
         "Messages displayed chronologically",
         "Typecheck passes"
       ],
-      "priority": 37,
+      "priority": 39,
       "passes": false,
       "notes": ""
     },
@@ -556,7 +591,7 @@
         "Real-time display via WebSocket push",
         "Typecheck passes"
       ],
-      "priority": 38,
+      "priority": 40,
       "passes": false,
       "notes": ""
     },
@@ -570,7 +605,7 @@
         "Failure reason extracted and displayed in run detail",
         "Typecheck passes"
       ],
-      "priority": 39,
+      "priority": 41,
       "passes": false,
       "notes": ""
     },
@@ -584,7 +619,7 @@
         "Indicator disappears when no active session",
         "Typecheck passes"
       ],
-      "priority": 40,
+      "priority": 42,
       "passes": false,
       "notes": ""
     },
@@ -598,7 +633,7 @@
         "Status transitions to 'scaled down' in UI",
         "Typecheck passes"
       ],
-      "priority": 41,
+      "priority": 43,
       "passes": false,
       "notes": ""
     },
@@ -613,7 +648,7 @@
         "Confirmation dialog before stopping",
         "Typecheck passes"
       ],
-      "priority": 42,
+      "priority": 44,
       "passes": false,
       "notes": ""
     },
@@ -628,7 +663,7 @@
         "Changes apply to next agent session",
         "Typecheck passes"
       ],
-      "priority": 43,
+      "priority": 45,
       "passes": false,
       "notes": ""
     },
@@ -643,7 +678,7 @@
         "Paginated with 50 entries per page",
         "Typecheck passes"
       ],
-      "priority": 44,
+      "priority": 46,
       "passes": false,
       "notes": ""
     },
@@ -657,7 +692,7 @@
         "Redaction applies to both stored logs and real-time stream",
         "Typecheck passes"
       ],
-      "priority": 45,
+      "priority": 47,
       "passes": false,
       "notes": "Security-critical. Regex patterns for known key formats."
     },
@@ -672,7 +707,7 @@
         "Message appears in run thread",
         "Typecheck passes"
       ],
-      "priority": 46,
+      "priority": 48,
       "passes": false,
       "notes": "Optional/later phase. deepagentsjs subagent protocol."
     },
@@ -686,7 +721,7 @@
         "Reconnection with message replay on disconnect",
         "Typecheck passes"
       ],
-      "priority": 47,
+      "priority": 49,
       "passes": false,
       "notes": "Optional/later phase. deepagentsjs subagent protocol."
     },
@@ -701,7 +736,7 @@
         "New providers appear in provider selection dropdowns",
         "Typecheck passes"
       ],
-      "priority": 48,
+      "priority": 50,
       "passes": false,
       "notes": "Optional/later phase. Extensibility feature."
     }
