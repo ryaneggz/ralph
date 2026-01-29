@@ -750,3 +750,22 @@
   - Email content comes from project.promptMd field (current PROMPT.md editor content)
   - Thread info displayed in both run list (truncated) and run detail view (full)
 ---
+
+## 2026-01-29 - US-37
+- Implemented email thread view with chronological message display in run detail
+- Added IEmailMessage interface and emailMessages array to Run model (messageId, direction, subject, body, timestamp)
+- Updated POST /api/projects/[id]/runs to store initial outbound email as first message in emailMessages array
+- Enhanced RunDetailView Email Thread section with chronological message list
+- Each message shows direction badge (Sent/Received), timestamp, subject, and collapsible body
+- Messages sorted chronologically; existing thread metadata (subject, thread ID) preserved above messages
+- Files changed:
+  - src/lib/models/run.ts (updated - added IEmailMessage, emailMessages field)
+  - src/app/api/projects/[id]/runs/route.ts (updated - stores outbound email message)
+  - src/components/run-detail-view.tsx (updated - chronological message display)
+  - prd.json (updated - US-37 passes: true)
+- **Learnings for future iterations:**
+  - emailMessages array on Run model tracks individual messages in a thread (outbound + inbound)
+  - Direction badge pattern: outbound=blue "Sent", inbound=green "Received"
+  - Message body uses collapsible `<details>` element to avoid cluttering the thread view
+  - Existing run detail API already returns emailMessages — no separate thread endpoint needed
+---
