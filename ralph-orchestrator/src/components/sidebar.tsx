@@ -1,19 +1,38 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useEffect, useState, useCallback } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { NewProjectDialog } from "@/components/new-project-dialog";
+import Link from "next/link";
+
+const LAST_PROJECT_KEY = "ralph-last-project-id";
 
 interface ProjectItem {
   _id: string;
   name: string;
 }
 
+export function getLastProjectId(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(LAST_PROJECT_KEY);
+}
+
+export function setLastProjectId(id: string) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(LAST_PROJECT_KEY, id);
+}
+
+function extractProjectId(pathname: string): string | null {
+  const match = pathname.match(/^\/projects\/([^/]+)/);
+  return match ? match[1] : null;
+}
+
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [projects, setProjects] = useState<ProjectItem[]>([]);
+  const currentProjectId = extractProjectId(pathname);
 
   useEffect(() => {
     fetch("/api/projects")
@@ -24,15 +43,51 @@ export function Sidebar() {
       .catch(() => {});
   }, [pathname]);
 
+  // Persist current project to localStorage
+  useEffect(() => {
+    if (currentProjectId) {
+      setLastProjectId(currentProjectId);
+    }
+  }, [currentProjectId]);
+
+  const handleSwitchProject = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const projectId = e.target.value;
+      if (projectId) {
+        setLastProjectId(projectId);
+        router.push(`/projects/${projectId}`);
+      }
+    },
+    [router]
+  );
+
   return (
     <aside className="flex h-full w-64 flex-col border-r bg-muted/30">
-      <div className="flex items-center justify-between border-b px-4 py-3">
-        <span className="text-sm font-semibold">Projects</span>
-        <NewProjectDialog>
-          <Button size="sm" variant="outline">
-            + New
-          </Button>
-        </NewProjectDialog>
+      <div className="flex flex-col gap-2 border-b px-4 py-3">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold">Projects</span>
+          <NewProjectDialog>
+            <Button size="sm" variant="outline">
+              + New
+            </Button>
+          </NewProjectDialog>
+        </div>
+        {projects.length > 1 && (
+          <select
+            value={currentProjectId ?? ""}
+            onChange={handleSwitchProject}
+            className="w-full rounded-md border bg-background px-2 py-1.5 text-sm"
+          >
+            <option value="" disabled>
+              Switch project…
+            </option>
+            {projects.map((p) => (
+              <option key={p._id} value={p._id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
       <nav className="flex-1 overflow-y-auto p-2">
         {projects.length === 0 ? (

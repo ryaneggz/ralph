@@ -179,3 +179,20 @@
   - Cascade delete for runs/drafts/IaC is handled at DB level when those models exist (currently only project doc)
 ---
 
+## 2026-01-29 - US-07
+- Implemented project switcher dropdown in sidebar (appears when >1 project exists)
+- Added localStorage persistence for last-used project ID (key: ralph-last-project-id)
+- Created LastProjectRedirect client component that auto-redirects from /inbox to last-used project
+- Sidebar saves current project ID to localStorage on navigation
+- Files changed:
+  - src/components/sidebar.tsx (updated - added switcher dropdown, localStorage helpers, exported getLastProjectId/setLastProjectId)
+  - src/components/last-project-redirect.tsx (new - client component for auto-redirect)
+  - src/app/inbox/page.tsx (updated - added LastProjectRedirect component)
+  - prd.json (updated - US-07 passes: true)
+- **Learnings for future iterations:**
+  - localStorage helpers (getLastProjectId, setLastProjectId) exported from sidebar.tsx for reuse
+  - Project switcher only renders when projects.length > 1 (no switcher for single project)
+  - LastProjectRedirect uses router.replace() to avoid adding /inbox to history stack
+  - extractProjectId() regex extracts project ID from any /projects/[id]/* pathname
+---
+
