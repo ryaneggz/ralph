@@ -6,6 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import Link from "next/link";
 import { IacGenerateSection } from "@/components/iac-generate-section";
 import { IacVersionHistoryWrapper } from "@/components/iac-version-history-wrapper";
+import { PromptMdViewer } from "@/components/prompt-md-viewer";
 
 const PROVIDERS = [
   { key: "claude-code", label: "Claude Code (Anthropic)" },
@@ -94,6 +95,14 @@ export default async function ProjectPage({
               Manage provider keys in settings
             </Link>
           </p>
+        </section>
+
+        <section className="mt-8">
+          <h3 className="text-lg font-semibold mb-3">PROMPT.md</h3>
+          <PromptMdViewer
+            content={project.promptMd ?? null}
+            projectId={id}
+          />
         </section>
 
         <section className="mt-8">

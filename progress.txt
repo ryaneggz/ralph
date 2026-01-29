@@ -514,3 +514,26 @@
   - Restore creates a new "applied" version entry to maintain full audit trail
   - IacVersionHistoryWrapper pattern separates server-aware routing from pure UI component
 ---
+
+## 2026-01-29 - US-25
+- Implemented read-only PROMPT.md viewer with frontmatter metadata badges and Markdown rendering
+- Added `promptMd` field to Project model (string, optional)
+- Created GET /api/projects/[id]/prompt-md endpoint
+- Built PromptMdViewer client component using react-markdown + remark-gfm + gray-matter
+- Frontmatter parsed and displayed as badge chips above Markdown body
+- Code blocks rendered with syntax-aware styling
+- Empty state with link to prompt editor when no PROMPT.md configured
+- Added PROMPT.md section to project workspace page (between Provider Status and IaC sections)
+- Files changed:
+  - src/lib/models/project.ts (updated - added promptMd field)
+  - src/app/api/projects/[id]/prompt-md/route.ts (new)
+  - src/components/prompt-md-viewer.tsx (new)
+  - src/app/projects/[id]/page.tsx (updated - added PROMPT.md section)
+  - ralph-orchestrator/package.json (updated - added react-markdown, remark-gfm, gray-matter)
+  - prd.json (updated - US-25 passes: true)
+- **Learnings for future iterations:**
+  - react-markdown + remark-gfm for GFM rendering; gray-matter for frontmatter parsing
+  - Frontmatter displayed as badge chips (key: value) above the rendered Markdown body
+  - PromptMdViewer is a client component due to useMemo; receives content as prop from server component
+  - Workspace page section order: Provider Status > PROMPT.md > Infrastructure as Code
+---
