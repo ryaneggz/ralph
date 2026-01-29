@@ -405,3 +405,25 @@
   - IAC_TEMPLATE_IDS exported for runtime validation in API routes
   - Settings page section order: Project Name > Repository > Provider API Keys > Env Vars > AWS Configuration > AWS Authentication > IaC Template > Danger Zone
 ---
+
+## 2026-01-29 - US-20
+- Implemented IaC file generation from selected Pulumi templates (Fargate, Lambda, EC2 Spot)
+- Added IIacFile interface and iacFiles field to Project model
+- Created src/lib/iac-generators.ts with template-specific Pulumi TypeScript generators
+- Created POST /api/projects/[id]/iac-generate endpoint that generates and stores files
+- Built IacGenerateSection client component with Generate button and tabbed file viewer
+- Added Infrastructure as Code section to project workspace page
+- Files changed:
+  - src/lib/models/project.ts (updated - added IIacFile interface, iacFiles field)
+  - src/lib/iac-generators.ts (new - Pulumi template generators per template type)
+  - src/app/api/projects/[id]/iac-generate/route.ts (new - POST endpoint)
+  - src/components/iac-generate-section.tsx (new - generate button + file viewer)
+  - src/app/projects/[id]/page.tsx (updated - added IaC section)
+  - prd.json (updated - US-20 passes: true)
+- **Learnings for future iterations:**
+  - IaC generators live in src/lib/iac-generators.ts — add new templates there with a generator function
+  - iacFiles stored as array of {path, content} objects directly in the Project document
+  - Generate endpoint is POST /api/projects/[id]/iac-generate — overwrites previous files on regenerate
+  - IacGenerateSection component shows tabbed file viewer with syntax-highlighted code
+  - Template generators receive projectName and awsRegion as options
+---

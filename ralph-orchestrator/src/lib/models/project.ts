@@ -19,6 +19,11 @@ export interface IProviderKey {
   maskedValue: string;
 }
 
+export interface IIacFile {
+  path: string;
+  content: string;
+}
+
 export interface IAwsAuth {
   authType: "role" | "access-keys";
   roleArn?: string;
@@ -38,6 +43,7 @@ export interface IProject extends Document {
   awsRegion?: string;
   awsAuth?: IAwsAuth;
   iacTemplate?: string;
+  iacFiles?: IIacFile[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -93,6 +99,10 @@ const ProjectSchema = new Schema<IProject>(
     awsRegion: { type: String, default: "us-east-1" },
     awsAuth: { type: AwsAuthSchema },
     iacTemplate: { type: String },
+    iacFiles: {
+      type: [{ path: { type: String, required: true }, content: { type: String, required: true } }],
+      default: [],
+    },
   },
   { timestamps: true }
 );

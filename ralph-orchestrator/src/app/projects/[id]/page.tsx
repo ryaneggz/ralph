@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import { Project } from "@/lib/models/project";
 import { AppShell } from "@/components/app-shell";
 import Link from "next/link";
+import { IacGenerateSection } from "@/components/iac-generate-section";
 
 const PROVIDERS = [
   { key: "claude-code", label: "Claude Code (Anthropic)" },
@@ -94,11 +95,17 @@ export default async function ProjectPage({
           </p>
         </section>
 
-        <div className="mt-8">
-          <p className="text-muted-foreground">
-            Project workspace — runs, settings, and IaC will appear here.
-          </p>
-        </div>
+        <section className="mt-8">
+          <h3 className="text-lg font-semibold mb-3">Infrastructure as Code</h3>
+          <IacGenerateSection
+            projectId={id}
+            iacTemplate={project.iacTemplate ?? null}
+            initialFiles={(project.iacFiles ?? []).map((f: { path: string; content: string }) => ({
+              path: f.path,
+              content: f.content,
+            }))}
+          />
+        </section>
       </div>
     </AppShell>
   );
