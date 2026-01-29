@@ -27,6 +27,7 @@ export interface IProject extends Document {
   repo?: IRepoConfig;
   envVars?: IEnvVar[];
   providerKeys?: IProviderKey[];
+  awsRegion?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -68,6 +69,7 @@ const ProjectSchema = new Schema<IProject>(
     repo: { type: RepoConfigSchema },
     envVars: { type: [EnvVarSchema], default: [] },
     providerKeys: { type: [ProviderKeySchema], default: [] },
+    awsRegion: { type: String, default: "us-east-1" },
   },
   { timestamps: true }
 );

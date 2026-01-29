@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Project } from "@/lib/models/project";
+import { AWS_REGIONS } from "@/lib/aws-regions";
 
 export async function PATCH(
   request: NextRequest,
@@ -14,24 +15,39 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await request.json();
-  const { name } = body;
+  const { name, awsRegion } = body;
 
-  if (!name || typeof name !== "string" || name.trim().length === 0) {
-    return NextResponse.json({ error: "Name is required" }, { status: 400 });
+  const update: Record<string, string> = {};
+
+  if (name !== undefined) {
+    if (!name || typeof name !== "string" || name.trim().length === 0) {
+      return NextResponse.json({ error: "Name is required" }, { status: 400 });
+    }
+    if (name.trim().length > 100) {
+      return NextResponse.json(
+        { error: "Name must be 100 characters or less" },
+        { status: 400 }
+      );
+    }
+    update.name = name.trim();
   }
 
-  if (name.trim().length > 100) {
-    return NextResponse.json(
-      { error: "Name must be 100 characters or less" },
-      { status: 400 }
-    );
+  if (awsRegion !== undefined) {
+    if (typeof awsRegion !== "string" || !(AWS_REGIONS as readonly string[]).includes(awsRegion)) {
+      return NextResponse.json({ error: "Invalid AWS region" }, { status: 400 });
+    }
+    update.awsRegion = awsRegion;
+  }
+
+  if (Object.keys(update).length === 0) {
+    return NextResponse.json({ error: "No fields to update" }, { status: 400 });
   }
 
   await connectDB();
 
   const project = await Project.findOneAndUpdate(
     { _id: id, userId: session.user.id },
-    { name: name.trim() },
+    update,
     { new: true }
   );
 

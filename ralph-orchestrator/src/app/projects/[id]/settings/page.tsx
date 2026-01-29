@@ -8,6 +8,7 @@ import { EnvVarsConfigForm } from "@/components/env-vars-config-form";
 import { ProjectRenameForm } from "@/components/project-rename-form";
 import { ProjectDeleteSection } from "@/components/project-delete-section";
 import { ProviderKeyForm } from "@/components/provider-key-form";
+import { AwsRegionForm } from "@/components/aws-region-form";
 import Link from "next/link";
 
 export default async function ProjectSettingsPage({
@@ -114,6 +115,14 @@ export default async function ProjectSettingsPage({
           <EnvVarsConfigForm
             projectId={id}
             initialEnvVars={envVarsData}
+          />
+        </section>
+
+        <section className="mt-8">
+          <h3 className="text-lg font-semibold mb-4">AWS Configuration</h3>
+          <AwsRegionForm
+            projectId={id}
+            initialRegion={project.awsRegion ?? "us-east-1"}
           />
         </section>
 

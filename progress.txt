@@ -26,7 +26,8 @@
 - API sub-resources: /api/projects/[id]/env-vars for env var CRUD
 - API sub-resources: /api/projects/[id]/provider-keys for provider key CRUD (PUT to add/replace, DELETE to remove)
 - ProviderKeyForm component is reusable for all providers (claude-code, codeex, opencode)
-- Project-level mutations (rename, delete) use /api/projects/[id] route with PATCH/DELETE methods
+- Project-level mutations (rename, delete, config) use /api/projects/[id] route with PATCH/DELETE methods
+- AWS regions list shared via src/lib/aws-regions.ts — use for any AWS region dropdowns/validation
 ---
 
 ## 2026-01-28 - US-01
@@ -304,4 +305,24 @@
   - isEncryptionConfigured() gracefully falls back to "pending-encryption" if no key set
   - AuditLog uses fire-and-forget pattern — logAudit() returns void, errors logged to console
   - Audit entries track: read, create, rotate, update, delete actions on provider-keys and env-vars
+---
+
+## 2026-01-29 - US-15
+- Implemented AWS region configuration per project
+- Added `awsRegion` field to Project model (default: us-east-1)
+- Created shared `src/lib/aws-regions.ts` with all AWS regions and human-readable labels
+- Extended PATCH /api/projects/[id] to accept `awsRegion` field with validation
+- Created AwsRegionForm client component with dropdown of all AWS regions
+- Added "AWS Configuration" section to project settings page (between Env Vars and Danger Zone)
+- Files changed:
+  - src/lib/models/project.ts (updated - added awsRegion field)
+  - src/lib/aws-regions.ts (new - AWS_REGIONS constant and labels)
+  - src/app/api/projects/[id]/route.ts (updated - PATCH accepts awsRegion)
+  - src/components/aws-region-form.tsx (new - region dropdown form)
+  - src/app/projects/[id]/settings/page.tsx (updated - added AWS Configuration section)
+  - prd.json (updated - US-15 passes: true)
+- **Learnings for future iterations:**
+  - PATCH /api/projects/[id] now handles multiple fields (name, awsRegion) — extend update object for new project-level fields
+  - AWS_REGIONS is a `const` array — use `(AWS_REGIONS as readonly string[]).includes()` for runtime string validation
+  - Settings page section order: Project Name > Repository > Provider API Keys > Env Vars > AWS Configuration > Danger Zone
 ---
