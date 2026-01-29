@@ -1,4 +1,4 @@
-# Ralph Orchestrator
+# Ralph Orchestrator 🤖
 
 A web-based platform for provisioning and interacting with **Ralph agents** (autonomous iteration loops) running on AWS infrastructure. Users compose tasks via a Gmail-style inbox interface where each "email" becomes a `PROMPT.md` that kicks off a Ralph loop. Users provide their own API keys (stored encrypted), can edit IaC before deployment, and agents auto-scale to zero when idle.
 
