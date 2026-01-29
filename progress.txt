@@ -634,3 +634,20 @@
   - startRun() already supports all three types (plan/apply/destroy) — just needed UI buttons
   - Destructive run types (apply, destroy) should always have confirmation before triggering
 ---
+
+## 2026-01-29 - US-31
+- Implemented Destroy run button with double confirmation (type project name to confirm)
+- Added "Destroy" button (red) next to Plan and Apply buttons in RunActions component
+- Double confirmation: first click shows inline panel requiring user to type project name exactly
+- Added projectName prop to RunActions, passed from workspace page
+- Uses existing startRun("destroy") function and POST /api/projects/[id]/runs endpoint
+- SQS integration stubbed — runs stay in "queued" status until backend infrastructure exists
+- Files changed:
+  - src/components/run-actions.tsx (updated - added Destroy button with double confirmation)
+  - src/app/projects/[id]/page.tsx (updated - passes projectName prop)
+  - prd.json (updated - US-31 passes: true)
+- **Learnings for future iterations:**
+  - Double confirmation pattern: inline panel with text input that must match entity name exactly
+  - Destroy confirmation is stricter than Apply (type name vs simple confirm) due to destructive nature
+  - startRun() already supported "destroy" type — only needed UI button
+---

@@ -114,6 +114,7 @@ export default async function ProjectPage({
           <h3 className="text-lg font-semibold mb-3">Runs</h3>
           <RunActions
             projectId={id}
+            projectName={project.name}
             defaultProvider={project.defaultProvider ?? null}
             hasConfiguredProvider={(project.providerKeys ?? []).length > 0}
           />

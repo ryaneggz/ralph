@@ -22,10 +22,12 @@ const STATUS_STYLES: Record<string, string> = {
 
 export function RunActions({
   projectId,
+  projectName,
   defaultProvider,
   hasConfiguredProvider,
 }: {
   projectId: string;
+  projectName: string;
   defaultProvider: string | null;
   hasConfiguredProvider: boolean;
 }) {
@@ -35,6 +37,8 @@ export function RunActions({
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmingApply, setConfirmingApply] = useState(false);
+  const [confirmingDestroy, setConfirmingDestroy] = useState(false);
+  const [destroyConfirmName, setDestroyConfirmName] = useState("");
 
   const fetchRuns = useCallback(async () => {
     setLoading(true);
@@ -111,6 +115,51 @@ export function RunActions({
             </button>
             <button
               onClick={() => setConfirmingApply(false)}
+              disabled={starting}
+              className="px-3 py-1 text-xs font-medium rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+        {!confirmingDestroy ? (
+          <button
+            onClick={() => setConfirmingDestroy(true)}
+            disabled={starting || !hasConfiguredProvider || !defaultProvider}
+            className="px-4 py-2 text-sm font-medium rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Destroy
+          </button>
+        ) : (
+          <div className="flex items-center gap-2 border border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-950 rounded-md px-3 py-1.5">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs text-red-800 dark:text-red-200">
+                This will destroy all infrastructure. Type <strong>{projectName}</strong> to confirm:
+              </span>
+              <input
+                type="text"
+                value={destroyConfirmName}
+                onChange={(e) => setDestroyConfirmName(e.target.value)}
+                placeholder={projectName}
+                className="px-2 py-1 text-xs border rounded dark:bg-gray-900 dark:border-gray-700"
+              />
+            </div>
+            <button
+              onClick={() => {
+                setConfirmingDestroy(false);
+                setDestroyConfirmName("");
+                startRun("destroy");
+              }}
+              disabled={starting || destroyConfirmName !== projectName}
+              className="px-3 py-1 text-xs font-medium rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {starting ? "Starting..." : "Confirm Destroy"}
+            </button>
+            <button
+              onClick={() => {
+                setConfirmingDestroy(false);
+                setDestroyConfirmName("");
+              }}
               disabled={starting}
               className="px-3 py-1 text-xs font-medium rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50"
             >
