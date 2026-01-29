@@ -708,3 +708,21 @@
   - Only queued/running runs can be canceled — API returns 400 for terminal states
   - Cancel log entry uses ISO timestamp format consistent with other log entries
 ---
+
+## 2026-01-29 - US-35
+- Implemented re-run functionality for completed/failed/canceled runs
+- Added "Re-run" button to RunActions run list items (terminal states only)
+- Added "Re-run" button to RunDetailView next to status badge for terminal runs
+- Re-run creates a new run with the same type and provider via existing POST /api/projects/[id]/runs
+- In run detail, re-run navigates to the new run's detail page
+- In run list, re-run refreshes the list to show the new run
+- Files changed:
+  - src/components/run-actions.tsx (updated - added rerunRun function, Re-run button per terminal run)
+  - src/components/run-detail-view.tsx (updated - added handleRerun function, Re-run button for terminal runs)
+  - prd.json (updated - US-35 passes: true)
+- **Learnings for future iterations:**
+  - Re-run reuses existing POST /runs endpoint — no new API route needed
+  - Terminal states for re-run eligibility: succeeded, failed, canceled
+  - Run detail re-run uses window.location.href for full page navigation to new run
+  - Run list re-run uses e.preventDefault() + e.stopPropagation() pattern from cancel button
+---

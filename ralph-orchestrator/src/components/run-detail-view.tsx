@@ -74,8 +74,10 @@ export function RunDetailView({
   const logEndRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
   const [canceling, setCanceling] = useState(false);
+  const [rerunning, setRerunning] = useState(false);
 
   const isActive = run.status === "queued" || run.status === "running";
+  const isTerminal = run.status === "succeeded" || run.status === "failed" || run.status === "canceled";
 
   const fetchRun = useCallback(async () => {
     try {
@@ -129,6 +131,25 @@ export function RunDetailView({
     }
   }
 
+  async function handleRerun() {
+    setRerunning(true);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/runs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: run.type, provider: run.provider }),
+      });
+      if (res.ok) {
+        const newRun = await res.json();
+        window.location.href = `/projects/${projectId}/runs/${newRun._id}`;
+      }
+    } catch {
+      // ignore
+    } finally {
+      setRerunning(false);
+    }
+  }
+
   function handleDownloadLogs() {
     const content = run.logs.join("\n");
     const blob = new Blob([content], { type: "text/plain" });
@@ -171,6 +192,15 @@ export function RunDetailView({
               (auto-refreshing)
             </span>
           </>
+        )}
+        {isTerminal && (
+          <button
+            onClick={handleRerun}
+            disabled={rerunning}
+            className="px-3 py-1 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {rerunning ? "Re-running..." : "Re-run"}
+          </button>
         )}
       </div>
 

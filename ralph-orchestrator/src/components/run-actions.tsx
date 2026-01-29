@@ -41,6 +41,7 @@ export function RunActions({
   const [confirmingDestroy, setConfirmingDestroy] = useState(false);
   const [destroyConfirmName, setDestroyConfirmName] = useState("");
   const [cancelingRunId, setCancelingRunId] = useState<string | null>(null);
+  const [rerunningRunId, setRerunningRunId] = useState<string | null>(null);
 
   const fetchRuns = useCallback(async () => {
     setLoading(true);
@@ -97,6 +98,31 @@ export function RunActions({
       setError("Failed to start run");
     } finally {
       setStarting(false);
+    }
+  };
+
+  const rerunRun = async (run: RunSummary, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setRerunningRunId(run._id);
+    setError(null);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/runs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: run.type, provider: run.provider }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "Failed to re-run");
+        return;
+      }
+      await fetchRuns();
+      router.refresh();
+    } catch {
+      setError("Failed to re-run");
+    } finally {
+      setRerunningRunId(null);
     }
   };
 
@@ -246,6 +272,15 @@ export function RunActions({
                     className="px-2 py-0.5 text-xs font-medium rounded bg-gray-600 text-white hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {cancelingRunId === run._id ? "Canceling..." : "Cancel"}
+                  </button>
+                )}
+                {(run.status === "succeeded" || run.status === "failed" || run.status === "canceled") && (
+                  <button
+                    onClick={(e) => rerunRun(run, e)}
+                    disabled={rerunningRunId === run._id}
+                    className="px-2 py-0.5 text-xs font-medium rounded bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {rerunningRunId === run._id ? "Re-running..." : "Re-run"}
                   </button>
                 )}
                 <span className="text-xs text-muted-foreground">
