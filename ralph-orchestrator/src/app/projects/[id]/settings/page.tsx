@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import { Project } from "@/lib/models/project";
 import { AppShell } from "@/components/app-shell";
 import { RepoConfigForm } from "@/components/repo-config-form";
+import { EnvVarsConfigForm } from "@/components/env-vars-config-form";
 import Link from "next/link";
 
 export default async function ProjectSettingsPage({
@@ -27,6 +28,12 @@ export default async function ProjectSettingsPage({
   if (!project) {
     redirect("/inbox");
   }
+
+  const envVarsData = (project.envVars ?? []).map((v: { key: string; source: "platform" | "user"; maskedValue: string }) => ({
+    key: v.key,
+    source: v.source,
+    maskedValue: v.maskedValue,
+  }));
 
   const repoData = project.repo
     ? {
@@ -55,6 +62,14 @@ export default async function ProjectSettingsPage({
           <RepoConfigForm
             projectId={id}
             initialRepo={repoData}
+          />
+        </section>
+
+        <section className="mt-8">
+          <h3 className="text-lg font-semibold mb-4">Agent Environment Variables</h3>
+          <EnvVarsConfigForm
+            projectId={id}
+            initialEnvVars={envVarsData}
           />
         </section>
       </div>

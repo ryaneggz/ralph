@@ -96,7 +96,7 @@
         "Typecheck passes"
       ],
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "notes": "Project-scoped. Platform auto-populates provider keys (e.g., ANTHROPIC_API_KEY from Claude Code provider config). User can add custom vars for their codebase (e.g., DATABASE_URL, CUSTOM_FLAG). All values stored encrypted. Merged set injected into agent container as environment variables."
     },
     {

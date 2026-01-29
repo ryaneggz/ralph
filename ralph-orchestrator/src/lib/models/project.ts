@@ -6,12 +6,20 @@ export interface IRepoConfig {
   accessTokenArn?: string;
 }
 
+export interface IEnvVar {
+  key: string;
+  valueArn: string;
+  source: "platform" | "user";
+  maskedValue: string;
+}
+
 export interface IProject extends Document {
   userId: string;
   name: string;
   description?: string;
   repoUrl?: string;
   repo?: IRepoConfig;
+  envVars?: IEnvVar[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -25,6 +33,16 @@ const RepoConfigSchema = new Schema<IRepoConfig>(
   { _id: false }
 );
 
+const EnvVarSchema = new Schema<IEnvVar>(
+  {
+    key: { type: String, required: true },
+    valueArn: { type: String, required: true },
+    source: { type: String, enum: ["platform", "user"], required: true, default: "user" },
+    maskedValue: { type: String, required: true },
+  },
+  { _id: false }
+);
+
 const ProjectSchema = new Schema<IProject>(
   {
     userId: { type: String, required: true, index: true },
@@ -32,6 +50,7 @@ const ProjectSchema = new Schema<IProject>(
     description: { type: String },
     repoUrl: { type: String },
     repo: { type: RepoConfigSchema },
+    envVars: { type: [EnvVarSchema], default: [] },
   },
   { timestamps: true }
 );
