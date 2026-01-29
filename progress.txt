@@ -873,3 +873,16 @@
   - After stopping, scaledDown state displayed for 10s then auto-clears (same pattern as idle timeout)
   - ECS task termination is TODO — currently only DB-level cancellation
 ---
+
+## 2026-01-29 - US-43
+- Verified idle timeout configuration already implemented as part of US-41
+- IdleTimeoutForm component with range slider (5-60 min, step 5) already exists
+- Project model has idleTimeoutMinutes field (default: 15, min: 5, max: 60)
+- PATCH /api/projects/[id] already accepts idleTimeoutMinutes
+- Settings page already includes Idle Timeout section
+- Typecheck passes — no code changes needed, only marked prd.json as passing
+- Files changed:
+  - prd.json (updated - US-43 passes: true)
+- **Learnings for future iterations:**
+  - US-43 was fully covered by US-41 implementation — check for overlapping stories before starting work
+---
