@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Project } from "@/lib/models/project";
 import type { IProviderKey } from "@/lib/models/project";
+import { encrypt, isEncryptionConfigured } from "@/lib/crypto";
+import { logAudit } from "@/lib/models/audit-log";
 
 const VALID_PROVIDERS = ["claude-code", "codeex", "opencode"] as const;
 type Provider = (typeof VALID_PROVIDERS)[number];
@@ -29,6 +31,13 @@ export async function GET(
   if (!project) {
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
+
+  logAudit({
+    userId: session.user.id,
+    projectId: id,
+    action: "read",
+    resourceType: "provider-keys",
+  });
 
   const providerKeys = (project.providerKeys ?? []).map((k: IProviderKey) => ({
     provider: k.provider,
@@ -73,15 +82,21 @@ export async function PUT(
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
 
+  // Encrypt the key at rest using AES-256-GCM
+  const encryptedKey = isEncryptionConfigured()
+    ? encrypt(apiKey)
+    : "pending-encryption";
+
   const keys: IProviderKey[] = [...(project.providerKeys ?? [])];
   const existingIdx = keys.findIndex((k) => k.provider === provider);
 
   const newEntry: IProviderKey = {
     provider,
-    // TODO: Store in AWS Secrets Manager at /ralph/{userId}/keys/{provider}
-    keyArn: "pending-encryption",
+    keyArn: encryptedKey,
     maskedValue: maskKey(apiKey),
   };
+
+  const action = existingIdx >= 0 ? "rotate" : "create";
 
   if (existingIdx >= 0) {
     keys[existingIdx] = newEntry;
@@ -91,6 +106,14 @@ export async function PUT(
 
   project.providerKeys = keys;
   await project.save();
+
+  logAudit({
+    userId: session.user.id,
+    projectId: id,
+    action,
+    resourceType: "provider-key",
+    resourceId: provider,
+  });
 
   return NextResponse.json({
     provider,
@@ -123,11 +146,18 @@ export async function DELETE(
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
 
-  // TODO: Delete from AWS Secrets Manager
   project.providerKeys = (project.providerKeys ?? []).filter(
     (k: IProviderKey) => k.provider !== provider
   );
   await project.save();
+
+  logAudit({
+    userId: session.user.id,
+    projectId: id,
+    action: "delete",
+    resourceType: "provider-key",
+    resourceId: provider,
+  });
 
   return NextResponse.json({ success: true });
 }

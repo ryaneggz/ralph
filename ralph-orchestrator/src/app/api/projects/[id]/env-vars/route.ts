@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Project } from "@/lib/models/project";
 import type { IEnvVar } from "@/lib/models/project";
+import { encrypt, isEncryptionConfigured } from "@/lib/crypto";
+import { logAudit } from "@/lib/models/audit-log";
 
 const ENV_KEY_REGEX = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
@@ -28,6 +30,13 @@ export async function GET(
   if (!project) {
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
+
+  logAudit({
+    userId: session.user.id,
+    projectId: id,
+    action: "read",
+    resourceType: "env-vars",
+  });
 
   const envVars = (project.envVars ?? []).map((v: IEnvVar) => ({
     key: v.key,
@@ -90,16 +99,18 @@ export async function PUT(
     existingMap.set(v.key, v);
   }
 
+  const useEncryption = isEncryptionConfigured();
+
   const updatedEnvVars: IEnvVar[] = envVars.map((v) => {
     const existing = existingMap.get(v.key);
     const source = v.source ?? "user";
 
     if (v.value) {
-      // New or updated value — encrypt and store
-      // TODO: Store value in AWS Secrets Manager and save ARN here
+      // Encrypt value at rest using AES-256-GCM
+      const encryptedValue = useEncryption ? encrypt(v.value) : "pending-encryption";
       return {
         key: v.key,
-        valueArn: `pending-encryption`,
+        valueArn: encryptedValue,
         source,
         maskedValue: maskValue(v.value),
       };
@@ -126,6 +137,14 @@ export async function PUT(
 
   project.envVars = updatedEnvVars;
   await project.save();
+
+  logAudit({
+    userId: session.user.id,
+    projectId: id,
+    action: "update",
+    resourceType: "env-vars",
+    metadata: { keys: envVars.map((v) => v.key) },
+  });
 
   const result = updatedEnvVars.map((v) => ({
     key: v.key,
@@ -160,11 +179,18 @@ export async function DELETE(
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
 
-  // TODO: Delete value from AWS Secrets Manager
   project.envVars = (project.envVars ?? []).filter(
     (v: IEnvVar) => v.key !== key
   );
   await project.save();
+
+  logAudit({
+    userId: session.user.id,
+    projectId: id,
+    action: "delete",
+    resourceType: "env-var",
+    resourceId: key,
+  });
 
   return NextResponse.json({ success: true });
 }
