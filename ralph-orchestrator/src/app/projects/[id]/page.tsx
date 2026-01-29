@@ -9,6 +9,7 @@ import { IacVersionHistoryWrapper } from "@/components/iac-version-history-wrapp
 import { PromptMdViewer } from "@/components/prompt-md-viewer";
 import { RunProviderSelector } from "@/components/run-provider-selector";
 import { RunActions } from "@/components/run-actions";
+import { ActiveAgentIndicator } from "@/components/active-agent-indicator";
 
 const PROVIDERS = [
   { key: "claude-code", label: "Claude Code (Anthropic)" },
@@ -41,7 +42,10 @@ export default async function ProjectPage({
   return (
     <AppShell>
       <div className="p-6">
-        <h2 className="text-2xl font-bold">{project.name}</h2>
+        <div className="flex items-center gap-4 flex-wrap">
+          <h2 className="text-2xl font-bold">{project.name}</h2>
+          <ActiveAgentIndicator projectId={id} />
+        </div>
         {project.description && (
           <p className="mt-2 text-muted-foreground">{project.description}</p>
         )}

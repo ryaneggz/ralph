@@ -810,3 +810,22 @@
   - Only queued/running runs transition to failed — terminal runs are not affected
   - failureReason capped at 500 chars to prevent oversized UI display
 ---
+
+## 2026-01-29 - US-40
+- Implemented active agent session indicator in project header
+- Created GET /api/projects/[id]/agent-session endpoint that checks for queued/running runs
+- Returns session info: run type, provider, uptime, iteration number (total run count)
+- Built ActiveAgentIndicator client component with animated green dot, uptime counter, and session metadata
+- 5s polling for real-time updates; local 1s tick for smooth uptime display
+- Indicator hidden when no active session (returns null)
+- Files changed:
+  - src/app/api/projects/[id]/agent-session/route.ts (new)
+  - src/components/active-agent-indicator.tsx (new)
+  - src/app/projects/[id]/page.tsx (updated - added ActiveAgentIndicator to header)
+  - prd.json (updated - US-40 passes: true)
+- **Learnings for future iterations:**
+  - Active session = any run with status queued or running for the project
+  - Agent session endpoint is read-only GET at /api/projects/[id]/agent-session
+  - Uptime calculated from run.createdAt, ticked locally between polls for smooth display
+  - Iteration number is total run count for the project (approximation)
+---
