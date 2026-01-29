@@ -13,6 +13,12 @@ export interface IEnvVar {
   maskedValue: string;
 }
 
+export interface IProviderKey {
+  provider: string;
+  keyArn: string;
+  maskedValue: string;
+}
+
 export interface IProject extends Document {
   userId: string;
   name: string;
@@ -20,6 +26,7 @@ export interface IProject extends Document {
   repoUrl?: string;
   repo?: IRepoConfig;
   envVars?: IEnvVar[];
+  providerKeys?: IProviderKey[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -43,6 +50,15 @@ const EnvVarSchema = new Schema<IEnvVar>(
   { _id: false }
 );
 
+const ProviderKeySchema = new Schema<IProviderKey>(
+  {
+    provider: { type: String, required: true },
+    keyArn: { type: String, required: true },
+    maskedValue: { type: String, required: true },
+  },
+  { _id: false }
+);
+
 const ProjectSchema = new Schema<IProject>(
   {
     userId: { type: String, required: true, index: true },
@@ -51,6 +67,7 @@ const ProjectSchema = new Schema<IProject>(
     repoUrl: { type: String },
     repo: { type: RepoConfigSchema },
     envVars: { type: [EnvVarSchema], default: [] },
+    providerKeys: { type: [ProviderKeySchema], default: [] },
   },
   { timestamps: true }
 );

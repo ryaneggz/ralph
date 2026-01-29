@@ -7,6 +7,7 @@ import { RepoConfigForm } from "@/components/repo-config-form";
 import { EnvVarsConfigForm } from "@/components/env-vars-config-form";
 import { ProjectRenameForm } from "@/components/project-rename-form";
 import { ProjectDeleteSection } from "@/components/project-delete-section";
+import { ProviderKeyForm } from "@/components/provider-key-form";
 import Link from "next/link";
 
 export default async function ProjectSettingsPage({
@@ -36,6 +37,15 @@ export default async function ProjectSettingsPage({
     source: v.source,
     maskedValue: v.maskedValue,
   }));
+
+  const providerKeysMap = new Map<string, { provider: string; maskedValue: string; configured: boolean }>();
+  for (const k of project.providerKeys ?? []) {
+    providerKeysMap.set(k.provider, {
+      provider: k.provider,
+      maskedValue: k.maskedValue,
+      configured: true,
+    });
+  }
 
   const repoData = project.repo
     ? {
@@ -70,6 +80,19 @@ export default async function ProjectSettingsPage({
             projectId={id}
             initialRepo={repoData}
           />
+        </section>
+
+        <section className="mt-8">
+          <h3 className="text-lg font-semibold mb-4">Provider API Keys</h3>
+          <div className="space-y-4">
+            <ProviderKeyForm
+              projectId={id}
+              provider="claude-code"
+              label="Claude Code (Anthropic)"
+              placeholder="sk-ant-..."
+              initialData={providerKeysMap.get("claude-code") ?? null}
+            />
+          </div>
         </section>
 
         <section className="mt-8">

@@ -22,6 +22,8 @@
 - Never return secrets from API — use boolean flags (e.g., hasAccessToken) or maskedValue
 - Env vars stored with maskedValue in DB to avoid decrypting for display
 - API sub-resources: /api/projects/[id]/env-vars for env var CRUD
+- API sub-resources: /api/projects/[id]/provider-keys for provider key CRUD (PUT to add/replace, DELETE to remove)
+- ProviderKeyForm component is reusable for all providers (claude-code, codeex, opencode)
 - Project-level mutations (rename, delete) use /api/projects/[id] route with PATCH/DELETE methods
 ---
 
@@ -194,5 +196,25 @@
   - Project switcher only renders when projects.length > 1 (no switcher for single project)
   - LastProjectRedirect uses router.replace() to avoid adding /inbox to history stack
   - extractProjectId() regex extracts project ID from any /projects/[id]/* pathname
+---
+
+## 2026-01-29 - US-08
+- Implemented Claude Code API key configuration on project settings page
+- Added IProviderKey interface and ProviderKeySchema to Project model (provider, keyArn, maskedValue)
+- Created /api/projects/[id]/provider-keys route with GET, PUT, DELETE methods
+- Built ProviderKeyForm client component with save, replace, and test-connection functionality
+- Added "Provider API Keys" section to project settings page (between Repository and Env Vars)
+- Test button validates Claude Code key format (sk-ant- prefix); full API validation deferred to backend
+- Files changed:
+  - src/lib/models/project.ts (updated - added IProviderKey, ProviderKeySchema, providerKeys field)
+  - src/app/api/projects/[id]/provider-keys/route.ts (new)
+  - src/components/provider-key-form.tsx (new)
+  - src/app/projects/[id]/settings/page.tsx (updated - added Provider API Keys section)
+  - prd.json (updated - US-08 passes: true)
+- **Learnings for future iterations:**
+  - Provider keys follow same pattern as env vars: masked values stored in DB, never return actual keys
+  - VALID_PROVIDERS constant defines allowed providers: claude-code, codeex, opencode
+  - ProviderKeyForm is reusable for all providers — just change provider/label/placeholder props
+  - Settings page section order: Project Name > Repository > Provider API Keys > Env Vars > Danger Zone
 ---
 
