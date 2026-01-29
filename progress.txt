@@ -25,6 +25,8 @@
 - Env vars stored with maskedValue in DB to avoid decrypting for display
 - API sub-resources: /api/projects/[id]/env-vars for env var CRUD
 - API sub-resources: /api/projects/[id]/provider-keys for provider key CRUD (PUT to add/replace, DELETE to remove)
+- Run model in src/lib/models/run.ts — separate collection from Project, queried by projectId+userId
+- Runs API at /api/projects/[id]/runs (GET list, POST create)
 - IaC templates defined in src/lib/iac-templates.ts — IAC_TEMPLATE_IDS for validation, IAC_TEMPLATES for display
 - ProviderKeyForm component is reusable for all providers (claude-code, codeex, opencode)
 - Project-level mutations (rename, delete, config) use /api/projects/[id] route with PATCH/DELETE methods
@@ -594,4 +596,26 @@
   - Unconfigured providers shown as disabled options with "(Not Configured)" suffix
   - No providers warning uses yellow border/bg pattern with link to settings
   - Workspace page section order: Provider Status > Run Provider > PROMPT.md > Infrastructure as Code
+---
+
+## 2026-01-29 - US-29
+- Implemented Plan run with Run model, API endpoints, and workspace UI
+- Created Run Mongoose model with type (plan/apply/destroy), status (queued/running/succeeded/failed/canceled), provider, logs, statusHistory
+- Created POST /api/projects/[id]/runs endpoint to queue a run (validates provider configured)
+- Created GET /api/projects/[id]/runs endpoint to list runs (newest first, max 50, excludes logs)
+- Built RunActions client component with Plan button, run list with status badges, error handling
+- Added "Runs" section to project workspace page (between Run Provider and PROMPT.md)
+- SQS integration stubbed — runs stay in "queued" status until backend infrastructure exists
+- Files changed:
+  - src/lib/models/run.ts (new - Run model)
+  - src/app/api/projects/[id]/runs/route.ts (new - POST create, GET list)
+  - src/components/run-actions.tsx (new - Plan button + run list)
+  - src/app/projects/[id]/page.tsx (updated - added Runs section)
+  - prd.json (updated - US-29 passes: true)
+- **Learnings for future iterations:**
+  - Run model is separate from Project (not embedded) — allows independent querying and scaling
+  - GET /runs excludes logs field via .select("-logs") for performance on list view
+  - POST /runs validates provider is configured on the project before allowing run creation
+  - Status badges use color coding: queued=blue, running=yellow+pulse, succeeded=green, failed=red, canceled=gray
+  - Workspace page section order: Provider Status > Run Provider > Runs > PROMPT.md > Infrastructure as Code
 ---

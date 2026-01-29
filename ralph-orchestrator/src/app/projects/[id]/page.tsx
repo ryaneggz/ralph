@@ -8,6 +8,7 @@ import { IacGenerateSection } from "@/components/iac-generate-section";
 import { IacVersionHistoryWrapper } from "@/components/iac-version-history-wrapper";
 import { PromptMdViewer } from "@/components/prompt-md-viewer";
 import { RunProviderSelector } from "@/components/run-provider-selector";
+import { RunActions } from "@/components/run-actions";
 
 const PROVIDERS = [
   { key: "claude-code", label: "Claude Code (Anthropic)" },
@@ -106,6 +107,15 @@ export default async function ProjectPage({
               (k: { provider: string }) => k.provider
             )}
             defaultProvider={project.defaultProvider ?? null}
+          />
+        </section>
+
+        <section className="mt-8">
+          <h3 className="text-lg font-semibold mb-3">Runs</h3>
+          <RunActions
+            projectId={id}
+            defaultProvider={project.defaultProvider ?? null}
+            hasConfiguredProvider={(project.providerKeys ?? []).length > 0}
           />
         </section>
 
