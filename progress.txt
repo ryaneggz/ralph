@@ -22,6 +22,7 @@
 - Never return secrets from API — use boolean flags (e.g., hasAccessToken) or maskedValue
 - AES-256-GCM encryption via src/lib/crypto.ts — uses ENCRYPTION_KEY env var, SHA-256 derived key
 - AuditLog model in src/lib/models/audit-log.ts — logAudit() is fire-and-forget (non-blocking)
+- Secret redaction via src/lib/redact-secrets.ts — use redactSecrets() for strings, redactLogLines() for arrays
 - Env vars stored with maskedValue in DB to avoid decrypting for display
 - API sub-resources: /api/projects/[id]/env-vars for env var CRUD
 - API sub-resources: /api/projects/[id]/provider-keys for provider key CRUD (PUT to add/replace, DELETE to remove)
@@ -905,4 +906,23 @@
   - AuditLog model already existed from US-14 with logAudit() fire-and-forget helper
   - Pagination uses skip/limit with countDocuments for total count
   - Settings page section order: ... > IaC Template > Audit Log > Idle Timeout > Danger Zone
+---
+
+## 2026-01-29 - US-45
+- Implemented secret redaction in logs via src/lib/redact-secrets.ts
+- Created redactSecrets() and redactLogLines() utility functions
+- Regex patterns cover: AWS keys (AKIA*), Anthropic keys (sk-ant-*), OpenAI keys (sk-*), Codeex/OpenCode keys, GitHub tokens (ghp_/gho_/ghs_/ghr_), Bearer tokens, generic key=value secrets, long hex/base64 strings near secret-like keywords
+- Redaction applied at two layers: on storage (webhook inbound) and on read (run detail API)
+- Webhook inbound route redacts log lines before saving to DB
+- Run detail GET endpoint redacts logs before returning to client (defense in depth)
+- Files changed:
+  - src/lib/redact-secrets.ts (new - redaction utility)
+  - src/app/api/webhooks/ralph-inbound/route.ts (updated - redact logs on storage)
+  - src/app/api/projects/[id]/runs/[runId]/route.ts (updated - redact logs on read)
+  - prd.json (updated - US-45 passes: true)
+- **Learnings for future iterations:**
+  - redactSecrets() uses global regexps — must reset lastIndex before each use
+  - Defense in depth: redact on storage AND on read to catch secrets from any source
+  - Patterns use lookbehind assertions for context-aware matching (e.g., key=VALUE)
+  - REDACTED constant is "[REDACTED]" — consistent replacement marker
 ---
