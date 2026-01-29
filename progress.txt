@@ -17,6 +17,9 @@
 - Project model in src/lib/models/project.ts (Mongoose)
 - Projects API at /api/projects (GET list, POST create)
 - Middleware matcher must include /projects/:path* for auth protection
+- Project settings page at /projects/[id]/settings — server component with client form components
+- API routes for project sub-resources follow /api/projects/[id]/{resource} pattern
+- Never return secrets from API — use boolean flags (e.g., hasAccessToken)
 ---
 
 ## 2026-01-28 - US-01
@@ -93,5 +96,28 @@
   - Sidebar re-fetches project list on pathname change (useEffect dep on pathname)
   - Next.js 15 params are Promises — must await them in page components
   - Project pages check userId ownership before rendering
+---
+
+## 2026-01-29 - US-04a
+- Implemented repository configuration for projects
+- Added `repo` subdocument (url, branch, accessTokenArn) to Project Mongoose model
+- Created PUT/GET API at /api/projects/[id]/repo with HTTPS Git URL validation
+- Built RepoConfigForm client component with URL, branch, access token fields
+- Created project settings page at /projects/[id]/settings with repo config section
+- Added settings link to project workspace page
+- Test Clone button validates URL format (full clone test deferred to backend infra)
+- Files changed:
+  - src/lib/models/project.ts (updated - added repo subdocument schema)
+  - src/app/api/projects/[id]/repo/route.ts (new)
+  - src/components/repo-config-form.tsx (new)
+  - src/app/projects/[id]/settings/page.tsx (new)
+  - src/app/projects/[id]/page.tsx (updated - added settings link)
+  - prd.json (updated - US-04a passes: true)
+- **Learnings for future iterations:**
+  - Mongoose subdocuments use `{ _id: false }` to avoid auto-generated _id
+  - API never returns raw access tokens — only `hasAccessToken` boolean
+  - Project settings page is at /projects/[id]/settings (server component renders client form)
+  - HTTPS Git URL regex: `/^https:\/\/.+\.git$/`
+  - Full clone test requires backend infrastructure (Lambda or similar) — stubbed for now
 ---
 

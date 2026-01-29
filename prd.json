@@ -78,7 +78,7 @@
         "Typecheck passes"
       ],
       "priority": 5,
-      "passes": false,
+      "passes": true,
       "notes": "Repo config is project-scoped. Access token stored in Secrets Manager at /ralph/{userId}/projects/{projectId}/repo-token. IaC provisioning must clone this repo into the agent container on startup."
     },
     {

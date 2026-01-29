@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { connectDB } from "@/lib/db";
 import { Project } from "@/lib/models/project";
 import { AppShell } from "@/components/app-shell";
+import Link from "next/link";
 
 export default async function ProjectPage({
   params,
@@ -38,6 +39,14 @@ export default async function ProjectPage({
             Repository: {project.repoUrl}
           </p>
         )}
+        <div className="mt-4">
+          <Link
+            href={`/projects/${id}/settings`}
+            className="text-sm text-primary hover:underline"
+          >
+            Project Settings
+          </Link>
+        </div>
         <div className="mt-8">
           <p className="text-muted-foreground">
             Project workspace — runs, settings, and IaC will appear here.
