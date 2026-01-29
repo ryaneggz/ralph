@@ -34,6 +34,7 @@ export function RunActions({
   const [loading, setLoading] = useState(false);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmingApply, setConfirmingApply] = useState(false);
 
   const fetchRuns = useCallback(async () => {
     setLoading(true);
@@ -85,6 +86,38 @@ export function RunActions({
         >
           {starting ? "Starting..." : "Plan"}
         </button>
+        {!confirmingApply ? (
+          <button
+            onClick={() => setConfirmingApply(true)}
+            disabled={starting || !hasConfiguredProvider || !defaultProvider}
+            className="px-4 py-2 text-sm font-medium rounded-md bg-orange-600 text-white hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Apply
+          </button>
+        ) : (
+          <div className="flex items-center gap-2 border border-orange-300 bg-orange-50 dark:border-orange-700 dark:bg-orange-950 rounded-md px-3 py-1.5">
+            <span className="text-xs text-orange-800 dark:text-orange-200">
+              This will provision real infrastructure. Continue?
+            </span>
+            <button
+              onClick={() => {
+                setConfirmingApply(false);
+                startRun("apply");
+              }}
+              disabled={starting}
+              className="px-3 py-1 text-xs font-medium rounded bg-orange-600 text-white hover:bg-orange-700 disabled:opacity-50"
+            >
+              {starting ? "Starting..." : "Confirm Apply"}
+            </button>
+            <button
+              onClick={() => setConfirmingApply(false)}
+              disabled={starting}
+              className="px-3 py-1 text-xs font-medium rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
         {!hasConfiguredProvider && (
           <span className="text-xs text-muted-foreground">
             Configure a provider and select it to start runs

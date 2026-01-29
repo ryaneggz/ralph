@@ -619,3 +619,18 @@
   - Status badges use color coding: queued=blue, running=yellow+pulse, succeeded=green, failed=red, canceled=gray
   - Workspace page section order: Provider Status > Run Provider > Runs > PROMPT.md > Infrastructure as Code
 ---
+
+## 2026-01-29 - US-30
+- Implemented Apply run button with inline confirmation dialog
+- Added "Apply" button (orange) next to existing "Plan" button in RunActions component
+- Confirmation dialog warns user that real infrastructure will be provisioned
+- Uses existing startRun("apply") function and POST /api/projects/[id]/runs endpoint
+- SQS integration stubbed — runs stay in "queued" status until backend infrastructure exists
+- Files changed:
+  - src/components/run-actions.tsx (updated - added Apply button with confirmation)
+  - prd.json (updated - US-30 passes: true)
+- **Learnings for future iterations:**
+  - Apply confirmation uses inline pattern (not modal) consistent with other confirmations in the codebase
+  - startRun() already supports all three types (plan/apply/destroy) — just needed UI buttons
+  - Destructive run types (apply, destroy) should always have confirmation before triggering
+---
