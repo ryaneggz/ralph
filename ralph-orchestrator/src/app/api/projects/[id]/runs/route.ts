@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Project } from "@/lib/models/project";
@@ -73,6 +74,13 @@ export async function POST(
     // Store thread info on run record
     run.threadId = emailResult.threadId;
     run.emailSubject = emailResult.subject;
+    run.emailMessages.push({
+      messageId: `msg-${randomUUID()}`,
+      direction: "outbound",
+      subject: emailResult.subject,
+      body: promptMd,
+      timestamp: emailResult.sentAt,
+    });
     run.logs.push(
       `[${new Date().toISOString()}] Email sent to agent — thread: ${emailResult.threadId}`
     );

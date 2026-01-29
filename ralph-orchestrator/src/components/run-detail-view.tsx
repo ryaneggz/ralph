@@ -7,6 +7,14 @@ interface StatusHistoryEntry {
   timestamp: string;
 }
 
+interface EmailMessage {
+  messageId: string;
+  direction: "outbound" | "inbound";
+  subject: string;
+  body: string;
+  timestamp: string;
+}
+
 interface RunDetail {
   _id: string;
   type: string;
@@ -18,6 +26,7 @@ interface RunDetail {
   logs: string[];
   threadId?: string | null;
   emailSubject?: string | null;
+  emailMessages?: EmailMessage[];
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -97,6 +106,7 @@ export function RunDetailView({
           logs: data.logs ?? [],
           threadId: data.threadId ?? null,
           emailSubject: data.emailSubject ?? null,
+          emailMessages: data.emailMessages ?? [],
         });
       }
     } catch {
@@ -208,11 +218,11 @@ export function RunDetailView({
         )}
       </div>
 
-      {/* Email thread info */}
+      {/* Email thread */}
       {run.threadId && (
         <div className="border rounded-lg p-4 bg-muted/30">
           <h3 className="text-sm font-semibold mb-2">Email Thread</h3>
-          <div className="space-y-1 text-sm">
+          <div className="space-y-1 text-sm mb-3">
             {run.emailSubject && (
               <div>
                 <span className="text-muted-foreground">Subject:</span>{" "}
@@ -224,6 +234,59 @@ export function RunDetailView({
               <span className="font-mono text-xs">{run.threadId}</span>
             </div>
           </div>
+
+          {/* Chronological messages */}
+          {(run.emailMessages ?? []).length > 0 && (
+            <div className="space-y-3 mt-3 border-t pt-3">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Messages
+              </h4>
+              {[...(run.emailMessages ?? [])]
+                .sort(
+                  (a, b) =>
+                    new Date(a.timestamp).getTime() -
+                    new Date(b.timestamp).getTime()
+                )
+                .map((msg) => (
+                  <div
+                    key={msg.messageId}
+                    className="border rounded-md p-3 bg-background"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                          msg.direction === "outbound"
+                            ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                            : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                        }`}
+                      >
+                        {msg.direction === "outbound" ? "Sent" : "Received"}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(msg.timestamp).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="text-sm font-medium mb-1">
+                      {msg.subject}
+                    </div>
+                    <details className="text-xs">
+                      <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                        View message body
+                      </summary>
+                      <pre className="mt-2 p-2 bg-muted/50 rounded text-xs whitespace-pre-wrap max-h-48 overflow-y-auto">
+                        {msg.body}
+                      </pre>
+                    </details>
+                  </div>
+                ))}
+            </div>
+          )}
+
+          {(run.emailMessages ?? []).length === 0 && (
+            <p className="text-xs text-muted-foreground mt-2">
+              No messages in thread yet.
+            </p>
+          )}
         </div>
       )}
 

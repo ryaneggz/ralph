@@ -3,6 +3,14 @@ import mongoose, { Schema, type Document } from "mongoose";
 export type RunType = "plan" | "apply" | "destroy";
 export type RunStatus = "queued" | "running" | "succeeded" | "failed" | "canceled";
 
+export interface IEmailMessage {
+  messageId: string;
+  direction: "outbound" | "inbound";
+  subject: string;
+  body: string;
+  timestamp: Date;
+}
+
 export interface IRun extends Document {
   projectId: string;
   userId: string;
@@ -13,6 +21,7 @@ export interface IRun extends Document {
   statusHistory: { status: RunStatus; timestamp: Date }[];
   threadId: string | null;
   emailSubject: string | null;
+  emailMessages: IEmailMessage[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -32,6 +41,18 @@ const RunSchema = new Schema<IRun>(
     logs: { type: [String], default: [] },
     threadId: { type: String, default: null },
     emailSubject: { type: String, default: null },
+    emailMessages: {
+      type: [
+        {
+          messageId: { type: String, required: true },
+          direction: { type: String, enum: ["outbound", "inbound"], required: true },
+          subject: { type: String, required: true },
+          body: { type: String, required: true },
+          timestamp: { type: Date, required: true, default: Date.now },
+        },
+      ],
+      default: [],
+    },
     statusHistory: {
       type: [
         {
