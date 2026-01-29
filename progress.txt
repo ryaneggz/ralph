@@ -689,3 +689,22 @@
   - Auto-scroll uses ref + scrollIntoView, disabled when user scrolls up (handleLogScroll checks distance from bottom)
   - Download uses Blob + createObjectURL pattern for client-side file generation
 ---
+
+## 2026-01-29 - US-34
+- Implemented cancel running job functionality
+- Created POST /api/projects/[id]/runs/[runId]/cancel endpoint that validates run is queued/running before canceling
+- Added Cancel button to RunDetailView (visible next to status badge for active runs)
+- Added Cancel button to RunActions run list items (inline, prevents Link navigation via stopPropagation)
+- Status transitions to "canceled" with statusHistory entry and log message
+- SQS/ECS abort signal stubbed — runs canceled in DB immediately
+- Files changed:
+  - src/app/api/projects/[id]/runs/[runId]/cancel/route.ts (new)
+  - src/components/run-detail-view.tsx (updated - added Cancel button + handler)
+  - src/components/run-actions.tsx (updated - added Cancel button per active run in list)
+  - prd.json (updated - US-34 passes: true)
+- **Learnings for future iterations:**
+  - Cancel endpoint is a separate route at /runs/[runId]/cancel (POST) — keeps concerns separated from GET
+  - Cancel button in run list uses e.preventDefault() + e.stopPropagation() to prevent Link navigation
+  - Only queued/running runs can be canceled — API returns 400 for terminal states
+  - Cancel log entry uses ISO timestamp format consistent with other log entries
+---

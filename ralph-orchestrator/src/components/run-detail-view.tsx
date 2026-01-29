@@ -73,6 +73,7 @@ export function RunDetailView({
   const [run, setRun] = useState<RunDetail>(initialRun);
   const logEndRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
+  const [canceling, setCanceling] = useState(false);
 
   const isActive = run.status === "queued" || run.status === "running";
 
@@ -111,6 +112,23 @@ export function RunDetailView({
     }
   }, [run.logs, autoScroll]);
 
+  async function handleCancel() {
+    setCanceling(true);
+    try {
+      const res = await fetch(
+        `/api/projects/${projectId}/runs/${runId}/cancel`,
+        { method: "POST" }
+      );
+      if (res.ok) {
+        await fetchRun();
+      }
+    } catch {
+      // ignore
+    } finally {
+      setCanceling(false);
+    }
+  }
+
   function handleDownloadLogs() {
     const content = run.logs.join("\n");
     const blob = new Blob([content], { type: "text/plain" });
@@ -141,9 +159,18 @@ export function RunDetailView({
           Created {new Date(run.createdAt).toLocaleString()}
         </span>
         {isActive && (
-          <span className="text-xs text-muted-foreground">
-            (auto-refreshing)
-          </span>
+          <>
+            <button
+              onClick={handleCancel}
+              disabled={canceling}
+              className="px-3 py-1 text-xs font-medium rounded-md bg-gray-600 text-white hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {canceling ? "Canceling..." : "Cancel Run"}
+            </button>
+            <span className="text-xs text-muted-foreground">
+              (auto-refreshing)
+            </span>
+          </>
         )}
       </div>
 

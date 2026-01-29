@@ -40,6 +40,7 @@ export function RunActions({
   const [confirmingApply, setConfirmingApply] = useState(false);
   const [confirmingDestroy, setConfirmingDestroy] = useState(false);
   const [destroyConfirmName, setDestroyConfirmName] = useState("");
+  const [cancelingRunId, setCancelingRunId] = useState<string | null>(null);
 
   const fetchRuns = useCallback(async () => {
     setLoading(true);
@@ -96,6 +97,25 @@ export function RunActions({
       setError("Failed to start run");
     } finally {
       setStarting(false);
+    }
+  };
+
+  const cancelRun = async (runId: string, e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent Link navigation
+    e.stopPropagation();
+    setCancelingRunId(runId);
+    try {
+      const res = await fetch(
+        `/api/projects/${projectId}/runs/${runId}/cancel`,
+        { method: "POST" }
+      );
+      if (res.ok) {
+        await fetchRuns();
+      }
+    } catch {
+      // ignore
+    } finally {
+      setCancelingRunId(null);
     }
   };
 
@@ -218,9 +238,20 @@ export function RunActions({
                   {run.provider}
                 </span>
               </div>
-              <span className="text-xs text-muted-foreground">
-                {new Date(run.createdAt).toLocaleString()}
-              </span>
+              <div className="flex items-center gap-2">
+                {(run.status === "queued" || run.status === "running") && (
+                  <button
+                    onClick={(e) => cancelRun(run._id, e)}
+                    disabled={cancelingRunId === run._id}
+                    className="px-2 py-0.5 text-xs font-medium rounded bg-gray-600 text-white hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {cancelingRunId === run._id ? "Canceling..." : "Cancel"}
+                  </button>
+                )}
+                <span className="text-xs text-muted-foreground">
+                  {new Date(run.createdAt).toLocaleString()}
+                </span>
+              </div>
             </Link>
           ))}
         </div>
