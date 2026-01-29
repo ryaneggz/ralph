@@ -769,3 +769,23 @@
   - Message body uses collapsible `<details>` element to avoid cluttering the thread view
   - Existing run detail API already returns emailMessages — no separate thread endpoint needed
 ---
+
+## 2026-01-29 - US-38
+- Implemented inbound webhook endpoint for Ralph agent email responses
+- Created POST /api/webhooks/ralph-inbound endpoint that captures inbound emails
+- Webhook looks up run by threadId or runId, appends inbound email to emailMessages array
+- Inbound email body content appended to run logs with [RALPH] prefix for display
+- Webhook authenticated via optional WEBHOOK_SECRET env var (x-webhook-secret header)
+- Added WEBHOOK_SECRET to .env.example
+- Existing RunDetailView already displays inbound emails via emailMessages (direction: "inbound" → green "Received" badge)
+- Existing log viewer already renders inbound content via polling
+- Files changed:
+  - src/app/api/webhooks/ralph-inbound/route.ts (new - inbound webhook endpoint)
+  - ralph-orchestrator/.env.example (updated - added WEBHOOK_SECRET)
+  - prd.json (updated - US-38 passes: true)
+- **Learnings for future iterations:**
+  - Webhook endpoints live at /api/webhooks/{name} — no auth session needed, use shared secret
+  - Inbound emails appended to both emailMessages (structured) and logs (line-by-line with [RALPH] prefix)
+  - Run lookup supports both threadId and runId for flexibility
+  - WEBHOOK_SECRET is optional — if not set, endpoint is open (for development)
+---
