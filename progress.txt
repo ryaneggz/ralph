@@ -9,6 +9,9 @@
 - Signup is a custom API route at /api/auth/signup (not part of NextAuth)
 - Auth pages use route group `(auth)` with login/ and signup/ directories
 - shadcn/ui components added via `npx shadcn@latest add <component>`
+- SessionProvider wrapper lives in src/components/session-provider.tsx (client component)
+- UserMenu component uses useSession() from next-auth/react for client-side session access
+- Root layout wraps children with AuthSessionProvider for client-side session access
 ---
 
 ## 2026-01-28 - US-01
@@ -36,5 +39,25 @@
   - GitHub OAuth auto-creates users in the signIn callback (no adapter needed for basic flow)
   - Email verification is a TODO - placeholder noted in signup route
   - bcryptjs used instead of bcrypt for easier cross-platform install
+---
+
+## 2026-01-28 - US-02
+- Implemented sign out via user menu dropdown
+- Created UserMenu client component with avatar, dropdown, and sign out action
+- Created AuthSessionProvider wrapper for next-auth/react SessionProvider
+- Wrapped root layout with AuthSessionProvider
+- Created /inbox page as authenticated landing page with header and UserMenu
+- Added shadcn dropdown-menu and avatar components
+- Files changed:
+  - src/components/user-menu.tsx (new)
+  - src/components/session-provider.tsx (new)
+  - src/app/layout.tsx (updated - added SessionProvider wrapper, updated metadata)
+  - src/app/inbox/page.tsx (new)
+  - src/components/ui/dropdown-menu.tsx (new - shadcn)
+  - src/components/ui/avatar.tsx (new - shadcn)
+- **Learnings for future iterations:**
+  - next-auth/react `signOut({ callbackUrl: "/login" })` handles JWT invalidation and redirect
+  - `useSession()` requires SessionProvider ancestor - wrapped in root layout
+  - UserMenu is a client component; inbox page is a server component that renders it
 ---
 
