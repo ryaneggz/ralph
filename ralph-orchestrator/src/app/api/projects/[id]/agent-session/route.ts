@@ -29,11 +29,54 @@ export async function GET(
     status: { $in: ["queued", "running"] },
   })
     .sort({ createdAt: -1 })
-    .select("type status provider createdAt statusHistory")
+    .select("type status provider createdAt updatedAt statusHistory logs emailMessages")
     .lean();
 
   if (!activeRun) {
     return NextResponse.json({ active: false });
+  }
+
+  // Check idle timeout — use last activity timestamp
+  const idleTimeoutMinutes = project.idleTimeoutMinutes ?? 15;
+  const idleTimeoutMs = idleTimeoutMinutes * 60 * 1000;
+
+  // Last activity is the most recent of: updatedAt, last log entry, last email message
+  let lastActivity = new Date(activeRun.updatedAt).getTime();
+
+  if (activeRun.emailMessages && activeRun.emailMessages.length > 0) {
+    const lastEmail = activeRun.emailMessages[activeRun.emailMessages.length - 1];
+    const emailTime = new Date(lastEmail.timestamp).getTime();
+    if (emailTime > lastActivity) lastActivity = emailTime;
+  }
+
+  if (activeRun.statusHistory && activeRun.statusHistory.length > 0) {
+    const lastStatus = activeRun.statusHistory[activeRun.statusHistory.length - 1];
+    const statusTime = new Date(lastStatus.timestamp).getTime();
+    if (statusTime > lastActivity) lastActivity = statusTime;
+  }
+
+  const idleMs = Date.now() - lastActivity;
+
+  // Auto spin-down if idle timeout exceeded
+  if (idleMs >= idleTimeoutMs) {
+    // Transition run to "canceled" with idle timeout reason
+    await Run.findByIdAndUpdate(activeRun._id, {
+      status: "canceled",
+      $push: {
+        statusHistory: {
+          status: "canceled",
+          timestamp: new Date(),
+        },
+        logs: `[${new Date().toISOString()}] Auto spin-down: agent idle for ${idleTimeoutMinutes} minutes (idle timeout exceeded)`,
+      },
+      failureReason: `Auto spin-down: idle timeout (${idleTimeoutMinutes}min) exceeded`,
+    });
+
+    return NextResponse.json({
+      active: false,
+      scaledDown: true,
+      reason: `Idle timeout exceeded (${idleTimeoutMinutes} minutes)`,
+    });
   }
 
   // Count total runs for this project to derive iteration number
@@ -55,5 +98,7 @@ export async function GET(
     startedAt: new Date(startedAt).toISOString(),
     uptimeMs,
     iterationNumber: totalRuns,
+    idleTimeoutMinutes,
+    idleMs,
   });
 }

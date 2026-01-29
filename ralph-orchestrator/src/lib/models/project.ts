@@ -56,6 +56,7 @@ export interface IProject extends Document {
   iacVersions?: IIacVersion[];
   promptMd?: string;
   defaultProvider?: string;
+  idleTimeoutMinutes?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -122,6 +123,7 @@ const ProjectSchema = new Schema<IProject>(
     iacDraftUpdatedAt: { type: Date },
     promptMd: { type: String },
     defaultProvider: { type: String },
+    idleTimeoutMinutes: { type: Number, default: 15, min: 5, max: 60 },
     iacVersions: {
       type: [
         {

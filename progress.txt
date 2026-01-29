@@ -829,3 +829,29 @@
   - Uptime calculated from run.createdAt, ticked locally between polls for smooth display
   - Iteration number is total run count for the project (approximation)
 ---
+
+## 2026-01-29 - US-41
+- Implemented auto spin-down after idle timeout for agent sessions
+- Added `idleTimeoutMinutes` field to Project model (default: 15, range: 5-60)
+- Extended PATCH /api/projects/[id] to accept and validate `idleTimeoutMinutes`
+- Updated GET /api/projects/[id]/agent-session to detect idle sessions and auto-cancel runs
+- Idle detection uses last activity timestamp (run updatedAt, last email, last status change)
+- Auto-canceled runs get log entry and failureReason explaining idle timeout
+- Created IdleTimeoutForm client component with range slider (5-60 min, step 5)
+- Added "Idle Timeout" section to project settings page (between IaC Template and Danger Zone)
+- Updated ActiveAgentIndicator to show "Scaled Down" notice when idle timeout triggers
+- Files changed:
+  - src/lib/models/project.ts (updated - added idleTimeoutMinutes field)
+  - src/app/api/projects/[id]/route.ts (updated - PATCH accepts idleTimeoutMinutes)
+  - src/app/api/projects/[id]/agent-session/route.ts (updated - idle detection + auto spin-down)
+  - src/components/active-agent-indicator.tsx (updated - scaled down notice)
+  - src/components/idle-timeout-form.tsx (new - slider form)
+  - src/app/projects/[id]/settings/page.tsx (updated - added Idle Timeout section)
+  - prd.json (updated - US-41 passes: true)
+- **Learnings for future iterations:**
+  - Idle detection uses max of: run.updatedAt, last emailMessage timestamp, last statusHistory timestamp
+  - Auto spin-down cancels the run via agent-session GET endpoint (checked on each poll)
+  - CloudWatch integration is stubbed — idle check is done application-side for now
+  - IdleTimeoutForm uses range slider with step=5 for intuitive selection
+  - Settings page section order: ... > IaC Template > Idle Timeout > Danger Zone
+---

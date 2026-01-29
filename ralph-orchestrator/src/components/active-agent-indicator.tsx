@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 
 interface AgentSession {
   active: boolean;
+  scaledDown?: boolean;
+  reason?: string;
   runId?: string;
   type?: string;
   status?: string;
@@ -11,6 +13,8 @@ interface AgentSession {
   startedAt?: string;
   uptimeMs?: number;
   iterationNumber?: number;
+  idleTimeoutMinutes?: number;
+  idleMs?: number;
 }
 
 function formatUptime(ms: number): string {
@@ -25,15 +29,24 @@ function formatUptime(ms: number): string {
 export function ActiveAgentIndicator({ projectId }: { projectId: string }) {
   const [session, setSession] = useState<AgentSession | null>(null);
   const [uptimeMs, setUptimeMs] = useState(0);
+  const [scaledDown, setScaledDown] = useState<{ reason: string } | null>(null);
 
   const fetchSession = useCallback(async () => {
     try {
       const res = await fetch(`/api/projects/${projectId}/agent-session`);
       if (res.ok) {
         const data: AgentSession = await res.json();
-        setSession(data);
-        if (data.active && data.uptimeMs) {
-          setUptimeMs(data.uptimeMs);
+        if (data.scaledDown) {
+          setScaledDown({ reason: data.reason ?? "Idle timeout exceeded" });
+          setSession(null);
+          // Clear scaled-down notice after 10 seconds
+          setTimeout(() => setScaledDown(null), 10000);
+        } else {
+          setSession(data);
+          setScaledDown(null);
+          if (data.active && data.uptimeMs) {
+            setUptimeMs(data.uptimeMs);
+          }
         }
       }
     } catch {
@@ -55,6 +68,20 @@ export function ActiveAgentIndicator({ projectId }: { projectId: string }) {
     }, 1000);
     return () => clearInterval(tick);
   }, [session?.active]);
+
+  if (scaledDown) {
+    return (
+      <div className="flex items-center gap-2 rounded-md border border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950 px-3 py-1.5 text-sm">
+        <span className="inline-flex h-2.5 w-2.5 rounded-full bg-yellow-500" />
+        <span className="font-medium text-yellow-800 dark:text-yellow-200">
+          Scaled Down
+        </span>
+        <span className="text-yellow-600 dark:text-yellow-400">
+          {scaledDown.reason}
+        </span>
+      </div>
+    );
+  }
 
   if (!session?.active) return null;
 

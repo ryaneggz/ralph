@@ -11,6 +11,7 @@ import { ProviderKeyForm } from "@/components/provider-key-form";
 import { AwsRegionForm } from "@/components/aws-region-form";
 import { AwsAuthForm } from "@/components/aws-auth-form";
 import { IacTemplateSelector } from "@/components/iac-template-selector";
+import { IdleTimeoutForm } from "@/components/idle-timeout-form";
 import Link from "next/link";
 
 export default async function ProjectSettingsPage({
@@ -151,6 +152,14 @@ export default async function ProjectSettingsPage({
           <IacTemplateSelector
             projectId={id}
             initialTemplate={project.iacTemplate ?? null}
+          />
+        </section>
+
+        <section className="mt-8">
+          <h3 className="text-lg font-semibold mb-4">Idle Timeout</h3>
+          <IdleTimeoutForm
+            projectId={id}
+            initialTimeout={project.idleTimeoutMinutes ?? 15}
           />
         </section>
 

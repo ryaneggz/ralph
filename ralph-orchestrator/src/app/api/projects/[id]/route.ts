@@ -16,9 +16,9 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await request.json();
-  const { name, awsRegion, iacTemplate, defaultProvider } = body;
+  const { name, awsRegion, iacTemplate, defaultProvider, idleTimeoutMinutes } = body;
 
-  const update: Record<string, string> = {};
+  const update: Record<string, string | number> = {};
 
   if (name !== undefined) {
     if (!name || typeof name !== "string" || name.trim().length === 0) {
@@ -53,6 +53,17 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid provider" }, { status: 400 });
     }
     update.defaultProvider = defaultProvider;
+  }
+
+  if (idleTimeoutMinutes !== undefined) {
+    const val = Number(idleTimeoutMinutes);
+    if (!Number.isInteger(val) || val < 5 || val > 60) {
+      return NextResponse.json(
+        { error: "Idle timeout must be an integer between 5 and 60 minutes" },
+        { status: 400 }
+      );
+    }
+    update.idleTimeoutMinutes = val;
   }
 
   if (Object.keys(update).length === 0) {
