@@ -103,6 +103,14 @@ If ALL stories are complete and passing, reply with:
 
 If there are still stories with `passes: false`, end your response normally (another iteration will pick up the next story).
 
+## Sensitive Files — DO NOT READ
+
+- `~/.env/ralph-orchestrator/.env.local` — production secrets
+- `ralph-orchestrator/.env.local` — symlink to the above
+- Any `.env`, `.env.local`, or `.env.*.local` files
+
+NEVER read, cat, or open these files. Use `.env.example` for reference on variable names.
+
 ## Important
 
 - Work on ONE story per iteration

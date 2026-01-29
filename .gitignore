@@ -11,3 +11,5 @@ progress.txt
 
 #Claude
 .claude/
+**/.env*
+.cursorignore

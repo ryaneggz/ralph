@@ -1,6 +1,6 @@
-import type { NextAuthOptions } from "next-auth";
+import NextAuth from "next-auth";
 
-export const authOptions: NextAuthOptions = {
+export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [],
   // TODO: Configure MongoDB adapter and providers in US-01
-};
+});
