@@ -159,6 +159,23 @@
 - **Learnings for future iterations:**
   - Project-level API routes go at /api/projects/[id]/route.ts (PATCH, DELETE, etc.)
   - router.refresh() from next/navigation re-fetches server components, updating sidebar project names
-  - Settings page sections order: Project Name > Repository > Env Vars
+  - Settings page sections order: Project Name > Repository > Env Vars > Danger Zone (delete)
+---
+
+## 2026-01-29 - US-06
+- Implemented project deletion with confirmation dialog requiring project name typed to confirm
+- Added DELETE method to /api/projects/[id] route (findOneAndDelete with userId check)
+- Created ProjectDeleteSection client component with two-step confirmation (button → type name → delete)
+- Added "Danger Zone" section at bottom of project settings page with destructive styling
+- Redirects to /inbox after successful deletion, router.refresh() updates sidebar
+- Files changed:
+  - src/app/api/projects/[id]/route.ts (updated - added DELETE handler)
+  - src/components/project-delete-section.tsx (new)
+  - src/app/projects/[id]/settings/page.tsx (updated - added danger zone section)
+  - prd.json (updated - US-06 passes: true)
+- **Learnings for future iterations:**
+  - Danger zone pattern: separate section at bottom with destructive border, requires typing entity name to confirm
+  - DELETE endpoint uses findOneAndDelete with userId ownership check
+  - Cascade delete for runs/drafts/IaC is handled at DB level when those models exist (currently only project doc)
 ---
 

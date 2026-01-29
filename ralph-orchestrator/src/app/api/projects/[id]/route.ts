@@ -41,3 +41,28 @@ export async function PATCH(
 
   return NextResponse.json(project);
 }
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await params;
+
+  await connectDB();
+
+  const project = await Project.findOneAndDelete({
+    _id: id,
+    userId: session.user.id,
+  });
+
+  if (!project) {
+    return NextResponse.json({ error: "Project not found" }, { status: 404 });
+  }
+
+  return NextResponse.json({ success: true });
+}

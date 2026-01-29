@@ -6,6 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { RepoConfigForm } from "@/components/repo-config-form";
 import { EnvVarsConfigForm } from "@/components/env-vars-config-form";
 import { ProjectRenameForm } from "@/components/project-rename-form";
+import { ProjectDeleteSection } from "@/components/project-delete-section";
 import Link from "next/link";
 
 export default async function ProjectSettingsPage({
@@ -77,6 +78,13 @@ export default async function ProjectSettingsPage({
             projectId={id}
             initialEnvVars={envVarsData}
           />
+        </section>
+
+        <section className="mt-12 pt-8 border-t border-destructive/20">
+          <h3 className="text-lg font-semibold mb-4 text-destructive">
+            Danger Zone
+          </h3>
+          <ProjectDeleteSection projectId={id} projectName={project.name} />
         </section>
       </div>
     </AppShell>
