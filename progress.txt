@@ -218,3 +218,15 @@
   - Settings page section order: Project Name > Repository > Provider API Keys > Env Vars > Danger Zone
 ---
 
+
+## 2026-01-29 - US-09
+- Added Codeex provider key form to project settings page
+- Added Codeex-specific key format validation (codeex- prefix) in ProviderKeyForm
+- Files changed:
+  - src/app/projects/[id]/settings/page.tsx (updated - added Codeex ProviderKeyForm)
+  - src/components/provider-key-form.tsx (updated - added codeex format validation)
+  - prd.json (updated - US-09 passes: true)
+- **Learnings for future iterations:**
+  - Adding a new provider key is trivial: add another ProviderKeyForm instance in settings page + add format validation in provider-key-form.tsx
+  - Provider key prefix conventions: claude-code → sk-ant-, codeex → codeex-
+---

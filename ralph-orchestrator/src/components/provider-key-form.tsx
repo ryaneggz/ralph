@@ -73,9 +73,14 @@ export function ProviderKeyForm({
     const keyToTest = apiKey.trim() || "";
 
     if (keyToTest) {
-      // Basic format validation for Claude Code keys
+      // Basic format validation per provider
       if (provider === "claude-code" && !keyToTest.startsWith("sk-ant-")) {
         setMessage({ type: "error", text: "Invalid key format. Claude Code keys start with sk-ant-" });
+        setTesting(false);
+        return;
+      }
+      if (provider === "codeex" && !keyToTest.startsWith("codeex-")) {
+        setMessage({ type: "error", text: "Invalid key format. Codeex keys start with codeex-" });
         setTesting(false);
         return;
       }
