@@ -368,3 +368,19 @@
   - decrypt() from crypto.ts recovers the stored secret access key for runtime use
   - Test endpoint is a separate route at /aws-auth/test to keep concerns separated from CRUD
 ---
+
+## 2026-01-29 - US-18
+- Implemented AWS credential update flow with edit/read-only toggle
+- When configured: shows read-only summary with masked values, Edit/Test/Remove buttons
+- Clicking Edit reveals editable form pre-filled with current values (masked secret)
+- On update: saves credentials then auto-runs test connection for validation
+- Cancel button returns to read-only view without saving
+- Running agents unaffected — note shown that new credentials apply on next iteration
+- Files changed:
+  - src/components/aws-auth-form.tsx (updated - added editing state, read-only summary view, validation on update)
+  - prd.json (updated - US-18 passes: true)
+- **Learnings for future iterations:**
+  - Edit toggle pattern: `editing` state starts false when configured, true when not
+  - Post-save validation: save first, then test connection, report combined result
+  - Cancel edit resets to read-only without API call
+---

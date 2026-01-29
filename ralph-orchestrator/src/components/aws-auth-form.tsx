@@ -21,6 +21,7 @@ interface AwsAuthFormProps {
 
 export function AwsAuthForm({ projectId, initialData }: AwsAuthFormProps) {
   const router = useRouter();
+  const [editing, setEditing] = useState(!initialData.configured);
   const [authType, setAuthType] = useState<"role" | "access-keys">(
     initialData.authType ?? "role"
   );
@@ -32,6 +33,40 @@ export function AwsAuthForm({ projectId, initialData }: AwsAuthFormProps) {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const configured = initialData.configured;
+
+  function handleEdit() {
+    setEditing(true);
+    setMessage(null);
+    setAuthType(initialData.authType ?? "role");
+    setRoleArn(initialData.roleArn ?? "");
+    setAccessKeyId(initialData.accessKeyId ?? "");
+    setSecretAccessKey("");
+  }
+
+  function handleCancelEdit() {
+    setEditing(false);
+    setMessage(null);
+  }
+
+  async function testConnection(): Promise<boolean> {
+    setTesting(true);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/aws-auth/test`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setMessage({ type: "error", text: data.error || "Connection test failed — credentials not saved" });
+        return false;
+      }
+      return true;
+    } catch {
+      setMessage({ type: "error", text: "Connection test failed — credentials not saved" });
+      return false;
+    } finally {
+      setTesting(false);
+    }
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -57,8 +92,22 @@ export function AwsAuthForm({ projectId, initialData }: AwsAuthFormProps) {
         const data = await res.json();
         throw new Error(data.error || "Failed to save");
       }
-      setMessage({ type: "success", text: "AWS authentication saved" });
+
+      // Validate credentials via test connection before confirming success
+      if (configured) {
+        const testPassed = await testConnection();
+        if (!testPassed) {
+          // Credentials saved but test failed — inform user
+          setMessage({ type: "error", text: "Credentials updated but connection test failed. Please verify your credentials." });
+          router.refresh();
+          setEditing(false);
+          return;
+        }
+      }
+
+      setMessage({ type: "success", text: configured ? "AWS credentials updated" : "AWS authentication saved" });
       setSecretAccessKey("");
+      setEditing(false);
       router.refresh();
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "Failed to save";
@@ -83,6 +132,7 @@ export function AwsAuthForm({ projectId, initialData }: AwsAuthFormProps) {
       setRoleArn("");
       setAccessKeyId("");
       setSecretAccessKey("");
+      setEditing(true);
       router.refresh();
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "Failed to delete";
@@ -115,11 +165,66 @@ export function AwsAuthForm({ projectId, initialData }: AwsAuthFormProps) {
     }
   }
 
+  // Read-only summary view when configured and not editing
+  if (configured && !editing) {
+    return (
+      <div className="space-y-4">
+        <div className="text-sm text-green-600 font-medium">
+          Configured — {initialData.authType === "role" ? "IAM Role" : "Access Keys"}
+        </div>
+
+        <div className="space-y-2 text-sm">
+          {initialData.authType === "role" && initialData.roleArn && (
+            <div>
+              <span className="text-muted-foreground">Role ARN:</span>{" "}
+              <span className="font-mono">{initialData.roleArn}</span>
+            </div>
+          )}
+          {initialData.authType === "access-keys" && (
+            <>
+              {initialData.accessKeyId && (
+                <div>
+                  <span className="text-muted-foreground">Access Key ID:</span>{" "}
+                  <span className="font-mono">{initialData.accessKeyId}</span>
+                </div>
+              )}
+              {initialData.maskedSecretKey && (
+                <div>
+                  <span className="text-muted-foreground">Secret Key:</span>{" "}
+                  <span className="font-mono">{initialData.maskedSecretKey}</span>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        <div className="flex gap-2">
+          <Button onClick={handleEdit} size="sm">
+            Edit Credentials
+          </Button>
+          <Button onClick={handleTestConnection} disabled={testing} size="sm" variant="outline">
+            {testing ? "Testing..." : "Test Connection"}
+          </Button>
+          <Button onClick={handleDelete} disabled={saving} size="sm" variant="destructive">
+            Remove
+          </Button>
+        </div>
+
+        {message && (
+          <p className={`text-sm ${message.type === "success" ? "text-green-600" : "text-red-600"}`}>
+            {message.text}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  // Editable form view
   return (
     <div className="space-y-4">
       {configured && (
-        <div className="text-sm text-green-600 font-medium">
-          Configured — {initialData.authType === "role" ? "IAM Role" : "Access Keys"}
+        <div className="text-sm text-muted-foreground">
+          Updating credentials — running agents will use new credentials on next iteration.
         </div>
       )}
 
@@ -217,16 +322,11 @@ export function AwsAuthForm({ projectId, initialData }: AwsAuthFormProps) {
 
       <div className="flex gap-2">
         <Button onClick={handleSave} disabled={saving || testing} size="sm">
-          {saving ? "Saving..." : configured ? "Update Credentials" : "Save Credentials"}
+          {saving || testing ? (testing ? "Validating..." : "Saving...") : configured ? "Update Credentials" : "Save Credentials"}
         </Button>
         {configured && (
-          <Button onClick={handleTestConnection} disabled={saving || testing} size="sm" variant="outline">
-            {testing ? "Testing..." : "Test Connection"}
-          </Button>
-        )}
-        {configured && (
-          <Button onClick={handleDelete} disabled={saving || testing} size="sm" variant="destructive">
-            Remove
+          <Button onClick={handleCancelEdit} disabled={saving || testing} size="sm" variant="outline">
+            Cancel
           </Button>
         )}
       </div>
