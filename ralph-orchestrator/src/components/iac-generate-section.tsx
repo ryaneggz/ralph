@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import Editor from "@monaco-editor/react";
+import Editor, { type OnMount } from "@monaco-editor/react";
+import type { editor } from "monaco-editor";
 
 interface IacFile {
   path: string;
@@ -34,10 +35,18 @@ export function IacGenerateSection({
   );
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
+  const [hasMarkerErrors, setHasMarkerErrors] = useState(false);
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const monacoRef = useRef<Parameters<OnMount>[1] | null>(null);
 
   const handleGenerate = async () => {
     setGenerating(true);
     setError(null);
+    setEditing(false);
+    setSaveStatus("idle");
     try {
       const res = await fetch(`/api/projects/${projectId}/iac-generate`, {
         method: "POST",
@@ -53,6 +62,81 @@ export function IacGenerateSection({
       setError("Network error");
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleEditorMount: OnMount = (editor, monaco) => {
+    editorRef.current = editor;
+    monacoRef.current = monaco;
+  };
+
+  const handleEditorChange = useCallback(
+    (value: string | undefined) => {
+      if (!editing || value === undefined) return;
+      setFiles((prev) =>
+        prev.map((f) =>
+          f.path === selectedFile ? { ...f, content: value } : f
+        )
+      );
+      setSaveStatus("idle");
+    },
+    [editing, selectedFile]
+  );
+
+  const checkMarkerErrors = useCallback(() => {
+    if (!monacoRef.current || !editorRef.current) return false;
+    const model = editorRef.current.getModel();
+    if (!model) return false;
+    const markers = monacoRef.current.editor.getModelMarkers({ resource: model.uri });
+    const hasErrors = markers.some(
+      (m: editor.IMarker) => m.severity === monacoRef.current!.MarkerSeverity.Error
+    );
+    setHasMarkerErrors(hasErrors);
+    return hasErrors;
+  }, []);
+
+  const handleSave = async () => {
+    const hasErrors = checkMarkerErrors();
+    if (hasErrors) {
+      setSaveStatus("error");
+      setError("Fix syntax errors before saving (see inline markers).");
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/iac-files`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ files }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Failed to save");
+        setSaveStatus("error");
+        return;
+      }
+      setSaveStatus("success");
+    } catch {
+      setError("Network error");
+      setSaveStatus("error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleToggleEdit = () => {
+    if (editing) {
+      // Exiting edit mode — revert unsaved changes
+      setFiles(initialFiles);
+      setEditing(false);
+      setSaveStatus("idle");
+      setError(null);
+      setHasMarkerErrors(false);
+    } else {
+      setEditing(true);
+      setSaveStatus("idle");
     }
   };
 
@@ -77,9 +161,29 @@ export function IacGenerateSection({
               : "Generate IaC Files"}
         </Button>
         {files.length > 0 && (
-          <span className="text-xs text-muted-foreground">
-            {files.length} file{files.length !== 1 ? "s" : ""} generated
-          </span>
+          <>
+            <Button
+              variant={editing ? "outline" : "secondary"}
+              onClick={handleToggleEdit}
+            >
+              {editing ? "Cancel Edit" : "Edit"}
+            </Button>
+            {editing && (
+              <Button onClick={handleSave} disabled={saving}>
+                {saving ? "Saving..." : "Save"}
+              </Button>
+            )}
+            <span className="text-xs text-muted-foreground">
+              {files.length} file{files.length !== 1 ? "s" : ""} generated
+              {editing && " — editing"}
+            </span>
+            {saveStatus === "success" && (
+              <span className="text-xs text-green-600">Saved</span>
+            )}
+            {hasMarkerErrors && editing && (
+              <span className="text-xs text-destructive">Syntax errors detected</span>
+            )}
+          </>
         )}
       </div>
 
@@ -116,14 +220,16 @@ export function IacGenerateSection({
                 language={getLanguage(activeFile.path)}
                 value={activeFile.content}
                 theme="vs-dark"
+                onMount={handleEditorMount}
+                onChange={handleEditorChange}
                 options={{
-                  readOnly: true,
+                  readOnly: !editing,
+                  domReadOnly: !editing,
                   minimap: { enabled: false },
                   scrollBeyondLastLine: false,
                   fontSize: 13,
                   lineNumbers: "on",
                   wordWrap: "on",
-                  domReadOnly: true,
                 }}
               />
             )}

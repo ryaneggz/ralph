@@ -443,3 +443,22 @@
   - Monaco needs explicit height (not auto); use container with fixed height
   - File tree sidebar pattern: left panel (w-48) + flex-1 editor area
 ---
+
+## 2026-01-29 - US-22
+- Implemented edit mode toggle for IaC files in Monaco editor
+- Added Edit/Cancel Edit/Save buttons to IaC generate section toolbar
+- Monaco editor switches between readOnly and editable modes
+- TypeScript syntax validation via Monaco markers — blocks save if errors exist
+- Created PUT /api/projects/[id]/iac-files endpoint for saving edited files
+- Cancel edit reverts to original files (unsaved changes discarded)
+- Files changed:
+  - src/components/iac-generate-section.tsx (updated - edit mode, save, marker validation)
+  - src/app/api/projects/[id]/iac-files/route.ts (new - PUT endpoint for saving)
+  - prd.json (updated - US-22 passes: true)
+- **Learnings for future iterations:**
+  - Monaco `onMount` callback gives access to both editor instance and monaco namespace
+  - Use `editor.IMarker` type from `monaco-editor` for marker type annotations
+  - `monacoRef.current.editor.getModelMarkers()` returns all markers for validation
+  - `OnMount` type imported from `@monaco-editor/react` for proper typing
+  - Cancel edit should revert to `initialFiles` prop (server state), not last saved state
+---
