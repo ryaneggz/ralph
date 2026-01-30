@@ -3,11 +3,14 @@
 A Git-based toolkit for orchestrating autonomous AI agent loops that iteratively complete user stories until a product requirement is done.
 
 ```bash
-# One-liner install (defaults to .ralph/)
-curl -sL https://raw.githubusercontent.com/ryaneggz/ralph/master/install.sh | bash
+# tar
+curl -L https://github.com/ryaneggz/ralph/archive/refs/heads/master.tar.gz | tar xz
 
-# Install to a custom directory
-curl -sL https://raw.githubusercontent.com/ryaneggz/ralph/master/install.sh | bash -s -- my-dir
+# zip
+curl -LO https://github.com/ryaneggz/ralph/archive/refs/heads/master.zip && unzip master.zip
+
+# git clone
+git clone https://github.com/ryaneggz/ralph.git
 ```
 
 ---
