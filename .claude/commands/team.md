@@ -102,15 +102,21 @@ Brief overview of your recommended approach (2-3 sentences)
 Write your complete proposal to: `$ARGUMENTS.output_dir/PROPOSAL_<PERSONA_NAME>.md`
 ```
 
-### Suggested Agent Personas (scale to $ARGUMENTS.subagents)
+### Dynamic Persona Generation (REQUIRED)
 
-| Agent | Persona    | Specialization                                     |
-| ----- | ---------- | -------------------------------------------------- |
-| 1     | ARCHITECT  | System design, scalability, architectural patterns |
-| 2     | CRAFTSMAN  | Clean code, maintainability, SOLID principles      |
-| 3     | GUARDIAN   | Security, error handling, edge cases, testing      |
-| 4     | OPTIMIZER  | Performance, efficiency, resource management       |
-| 5     | INTEGRATOR | APIs, interfaces, system boundaries                |
+Generate `$ARGUMENTS.subagents` personas **derived from `$ARGUMENTS.query`**. Store as `AGENT_PERSONAS`.
+
+| Agent | Persona           | Query-Specific Focus                   |
+| ----- | ----------------- | -------------------------------------- |
+| 1-N   | `<DOMAIN>_<ROLE>` | Critical dimension of **this feature** |
+
+**Format:** Compound names only (e.g., `AUTH_SENTINEL`, `CACHE_STRATEGIST`). No generic roles.
+
+**Inject per agent:**
+
+```
+You are <PERSONA> — specialist in <FOCUS>. Analyze "$ARGUMENTS.query" through YOUR lens.
+```
 
 ---
 
