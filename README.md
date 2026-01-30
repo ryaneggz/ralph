@@ -2,6 +2,14 @@
 
 A Git-based toolkit for orchestrating autonomous AI agent loops that iteratively complete user stories until a product requirement is done.
 
+```bash
+# One-liner install (defaults to .ralph/)
+curl -sL https://raw.githubusercontent.com/ryaneggz/ralph/master/install.sh | bash
+
+# Install to a custom directory
+curl -sL https://raw.githubusercontent.com/ryaneggz/ralph/master/install.sh | bash -s -- my-dir
+```
+
 ---
 
 ## What is Ralph?
