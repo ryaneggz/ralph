@@ -13,7 +13,6 @@ progress.txt
 
 # Claude
 **/.env*
-.cursorignore
 
 # Defensive patterns
 **/node_modules/
