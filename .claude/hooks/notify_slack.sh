@@ -1,113 +1,154 @@
 #!/usr/bin/env bash
 
-# Loads env vars from .claude/.env.claude
 set -euo pipefail
 
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(dirname "$DIR")"
-ENV_FILE="$ROOT/.env.claude"
+# Get script directory for fallback env path
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [ -f "$ENV_FILE" ]; then
-  set -a
-  source "$ENV_FILE"
-  set +a
+# Prefer global env file, fall back to repo-local .claude/.env.claude
+PREFERRED_ENV_PATH="$HOME/.env/.claude/.env.claude"
+FALLBACK_ENV_PATH="$(dirname "$SCRIPT_DIR")/.env.claude"
+
+if [[ -f "$PREFERRED_ENV_PATH" ]]; then
+    DOTENV_PATH="$PREFERRED_ENV_PATH"
+else
+    DOTENV_PATH="$FALLBACK_ENV_PATH"
 fi
 
+# Load env file if it exists
+if [[ -f "$DOTENV_PATH" ]]; then
+    # Export variables from env file (handles quoted values and comments)
+    set -a
+    # shellcheck disable=SC1090
+    source "$DOTENV_PATH"
+    set +a
+    echo "Loaded env from: $DOTENV_PATH" >&2
+else
+    echo "No env file found at $PREFERRED_ENV_PATH or $FALLBACK_ENV_PATH" >&2
+fi
+
+# Check for SLACK_WEBHOOK_URL
 if [[ -z "${SLACK_WEBHOOK_URL:-}" ]]; then
-  echo "SLACK_WEBHOOK_URL is not set" >&2
-  exit 1
+    echo "SLACK_WEBHOOK_URL is not set" >&2
+    exit 1
 fi
 
-# Reads all of stdin as one string
-payload="$(cat)"
+# Read input JSON from stdin
+INPUT_JSON=$(cat)
 
-# Extracts a field from the input JSON
-json_get() {
-  echo "$payload" | jq -r "$1"
-}
+if [[ -z "$INPUT_JSON" ]]; then
+    echo "Failed to read input from stdin" >&2
+    exit 1
+fi
 
-event="$(json_get '.hook_event_name' 2>/dev/null || echo "")"
-cwd="$(json_get '.cwd' 2>/dev/null || echo "")"
-session_id="$(json_get '.session_id' 2>/dev/null || echo "")"
-timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
+# Parse JSON fields using jq
+EVENT=$(echo "$INPUT_JSON" | jq -r '.hook_event_name // ""')
+CWD=$(echo "$INPUT_JSON" | jq -r '.cwd // ""')
+SESSION_ID=$(echo "$INPUT_JSON" | jq -r '.session_id // ""')
 
+# Get current timestamp
+TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+
+# Function to extract final response from transcript JSONL file
 get_final_response() {
-  local path="$1"
-  local max_length=1500
-  local result=""
-  if [[ -z "$path" || ! -f "$path" ]]; then
-    echo "(transcript not found)"
-    return
-  fi
-  # Reverse the file to get the last relevant entry
-  # Find the latest assistant message, extract the text, merge paragraphs
-  result="$(tac "$path" | \
-    jq -Rc '
-      try fromjson catch empty
-    ' | awk '
-      $0 ~ /"type":"assistant"/ && $0 ~ /"role":"assistant"/ { print }
-    ' | head -1 | \
-      jq -r '
-        .message.content // []
-        | map(
-            if type=="object" and .type=="text" then .text
-            elif type=="string" then .
-            else empty
-            end
-          ) | join("\n")
-      ' 2>/dev/null)"
-  if [[ -z "$result" ]]; then
-    echo "(no response found)"
-    return
-  fi
-  local len=${#result}
-  if (( len > max_length )); then
-    echo "${result:0:$max_length}..."
-    echo "_(truncated)_"
-  else
-    echo "$result"
-  fi
+    local transcript_path="$1"
+    local max_length="${2:-1500}"
+
+    # Expand ~ in path
+    transcript_path="${transcript_path/#\~/$HOME}"
+
+    if [[ -z "$transcript_path" || ! -f "$transcript_path" ]]; then
+        echo "(transcript not found)"
+        return
+    fi
+
+    # Extract final assistant response from JSONL
+    # Look for entries with type=assistant and extract text content
+    local final_response=""
+    final_response=$(jq -rs '
+        [.[] | select(.type == "assistant" and .message.role == "assistant" and .message.content)]
+        | last
+        | .message.content
+        | if type == "array" then
+            [.[] | if type == "object" and .type == "text" then .text elif type == "string" then . else empty end]
+            | join("\n")
+          elif type == "string" then
+            .
+          else
+            ""
+          end
+        // ""
+    ' "$transcript_path" 2>/dev/null || echo "")
+
+    if [[ -z "$final_response" ]]; then
+        echo "(no response found)"
+        return
+    fi
+
+    # Truncate if too long
+    if [[ ${#final_response} -gt $max_length ]]; then
+        echo "${final_response:0:$max_length}...
+_(truncated)_"
+    else
+        echo "$final_response"
+    fi
 }
 
-# Compose notification message
-text=""
-if [[ "$event" == "Notification" ]]; then
-  nt="$(json_get '.notification_type' 2>/dev/null || echo "")"
-  msg="$(json_get '.message' 2>/dev/null || echo "")"
-  text="🧠 Claude Code: *${nt}*
-${msg}
-• time: \`${timestamp}\`
-• cwd: \`${cwd}\`
-• session: \`${session_id}\`"
-elif [[ "$event" == "Stop" ]]; then
-  active="$(json_get '.stop_hook_active' 2>/dev/null || echo "")"
-  transcript_path="$(json_get '.transcript_path' 2>/dev/null || echo "")"
-  final_response="$(get_final_response "$transcript_path")"
-  text="✅ Claude Code: *Stop*
-• time: \`${timestamp}\`
-• cwd: \`${cwd}\`
-• session: \`${session_id}\`
-• stop_hook_active: \`${active}\`
+# Build Slack message based on event type
+TEXT=""
+case "$EVENT" in
+    "Notification")
+        NOTIFICATION_TYPE=$(echo "$INPUT_JSON" | jq -r '.notification_type // ""')
+        MESSAGE=$(echo "$INPUT_JSON" | jq -r '.message // ""')
+        TEXT="🧠 Claude Code: *${NOTIFICATION_TYPE}*
+${MESSAGE}
+• time: \`${TIMESTAMP}\`
+• cwd: \`${CWD}\`
+• session: \`${SESSION_ID}\`"
+        ;;
+    "Stop")
+        STOP_HOOK_ACTIVE=$(echo "$INPUT_JSON" | jq -r '.stop_hook_active // false')
+        TRANSCRIPT_PATH=$(echo "$INPUT_JSON" | jq -r '.transcript_path // ""')
+        FINAL_RESPONSE=$(get_final_response "$TRANSCRIPT_PATH")
+        TEXT="✅ Claude Code: *Stop*
+• time: \`${TIMESTAMP}\`
+• cwd: \`${CWD}\`
+• session: \`${SESSION_ID}\`
+• stop_hook_active: \`${STOP_HOOK_ACTIVE}\`
 
 *Final Response:*
 \`\`\`
-${final_response}
-\`\`\`
-"
-else
-  text="Claude Code hook: ${event}
-• time: \`${timestamp}\`
-• cwd: ${cwd}
-• session: ${session_id}"
-fi
+${FINAL_RESPONSE}
+\`\`\`"
+        ;;
+    *)
+        TEXT="Claude Code hook: ${EVENT}
+• time: \`${TIMESTAMP}\`
+• cwd: ${CWD}
+• session: ${SESSION_ID}"
+        ;;
+esac
+
+# Build Slack payload
+SLACK_PAYLOAD=$(jq -n --arg text "$TEXT" '{"text": $text}')
 
 # Send to Slack
-resp_code=$(curl -X POST -s -o /dev/null -w '%{http_code}' \
-  -H "Content-Type: application/json" \
-  -d "{\"text\": $(jq -Rs <<<"$text")}" \
-  "$SLACK_WEBHOOK_URL"
-)
-if [[ "$resp_code" -lt 200 || "$resp_code" -ge 300 ]]; then
-  echo "Failed to send Slack notification (HTTP $resp_code)" >&2
-  exit 1
+HTTP_RESPONSE=$(curl -s -w "\n%{http_code}" \
+    -X POST "$SLACK_WEBHOOK_URL" \
+    -H "Content-Type: application/json" \
+    -d "$SLACK_PAYLOAD" \
+    --max-time 10 \
+    2>&1) || {
+    echo "Failed to send Slack notification: curl error" >&2
+    exit 1
+}
+
+# Extract HTTP status code (last line)
+HTTP_CODE=$(echo "$HTTP_RESPONSE" | tail -n1)
+
+# Check for success (2xx status codes)
+if [[ ! "$HTTP_CODE" =~ ^2[0-9][0-9]$ ]]; then
+    RESPONSE_BODY=$(echo "$HTTP_RESPONSE" | sed '$d')
+    echo "Failed to send Slack notification: HTTP $HTTP_CODE - $RESPONSE_BODY" >&2
+    exit 1
 fi

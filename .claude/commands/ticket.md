@@ -33,9 +33,9 @@ SUBAGENTS: $ARGUMENTS.subagents (default: 3)
     - RUN `cd ./.worktrees/<prefix>-<number> && git commit -m "init <branch-name>"` to commit initialization
 
 5. _CREATE_ spec folder for artifacts:
-    - _DETERMINE_ spec folder path: `.specs/<prefix>-<number>-<short-name>/`
-        - Example: `.specs/feature-656-distributed-workers-taskiq/`
-    - RUN `mkdir -p ./.worktrees/<prefix>-<number>/.specs/<prefix>-<number>-<short-name>` to create spec folder
+    - _DETERMINE_ spec folder path: `.claude/plans/<prefix>-<number>-<short-name>/`
+        - Example: `.claude/plans/feature-656-distributed-workers-taskiq/`
+    - RUN `mkdir -p ./.worktrees/<prefix>-<number>/.claude/plans/<prefix>-<number>-<short-name>` to create spec folder
     - _STORE_ spec folder path for later reference
 
 6. _GENERATE_ user stories from issue:
@@ -73,7 +73,7 @@ SUBAGENTS: $ARGUMENTS.subagents (default: 3)
         - Extracting the core capability being requested
         - Inferring the business value or user benefit
         - Converting issue requirements into testable acceptance criteria
-    - _WRITE_ user stories to `.specs/<prefix>-<number>-<short-name>/USER_STORIES.md`
+    - _WRITE_ user stories to `.claude/plans/<prefix>-<number>-<short-name>/USER_STORIES.md`
     - _REPORT_ "Generated <N> user stories for PR review"
 
 7. _PREPARE_ team query from issue with user stories:
@@ -94,8 +94,8 @@ SUBAGENTS: $ARGUMENTS.subagents (default: 3)
 
 8. _INVOKE_ team workflow from worktree:
     - RUN `cd ./.worktrees/<prefix>-<number>` to change to worktree directory
-    - _EXECUTE_ `/team query="<composed-query>" subagents=$SUBAGENTS output_dir=".specs/<prefix>-<number>-<short-name>/"` to run multi-agent implementation workflow
-    - The team workflow will generate artifacts into `.specs/<prefix>-<number>-<short-name>/`:
+    - _EXECUTE_ `/team query="<composed-query>" subagents=$SUBAGENTS output_dir=".claude/plans/<prefix>-<number>-<short-name>/"` to run multi-agent implementation workflow
+    - The team workflow will generate artifacts into `.claude/plans/<prefix>-<number>-<short-name>/`:
         - Phase 0: Context initialization from CLAUDE.md → `INITIAL_REPORT` (in memory)
         - Phase 1: Generate expert proposals → `PROPOSAL_ARCHITECT.md`, `PROPOSAL_CRAFTSMAN.md`, `PROPOSAL_GUARDIAN.md`
         - Phase 2: Council review and synthesis → `REVIEW.md`
@@ -105,7 +105,7 @@ SUBAGENTS: $ARGUMENTS.subagents (default: 3)
     - _MONITOR_ team workflow progress through all phases
 
 9. _VERIFY_ implementation completion:
-    - _CHECK_ that `.specs/<prefix>-<number>-<short-name>/TASKS.md` shows all tasks completed
+    - _CHECK_ that `.claude/plans/<prefix>-<number>-<short-name>/TASKS.md` shows all tasks completed
     - _CHECK_ that validation phase passed successfully
     - RUN `cd ./.worktrees/<prefix>-<number> && git status` to confirm all changes committed
     - _IF_ uncommitted changes exist:
@@ -128,21 +128,21 @@ SUBAGENTS: $ARGUMENTS.subagents (default: 3)
 
     Resolves #<issue-number>
 
-    <Brief summary from .specs/<prefix>-<number>-<short-name>/REVIEW.md>
+    <Brief summary from .claude/plans/<prefix>-<number>-<short-name>/REVIEW.md>
 
     ## User Stories
 
-    <Include user stories from .specs/<prefix>-<number>-<short-name>/USER_STORIES.md>
+    <Include user stories from .claude/plans/<prefix>-<number>-<short-name>/USER_STORIES.md>
 
     **Reviewer:** Use these acceptance criteria to validate the implementation.
 
     ## Implementation
 
-    <Key implementation points from .specs/<prefix>-<number>-<short-name>/TASKS.md>
+    <Key implementation points from .claude/plans/<prefix>-<number>-<short-name>/TASKS.md>
 
     ## Testing
 
-    <Validation results from .specs/<prefix>-<number>-<short-name>/TASKS.md>
+    <Validation results from .claude/plans/<prefix>-<number>-<short-name>/TASKS.md>
 
     🤖 Generated with [Claude Code](https://claude.com/claude-code)
     ```
@@ -157,7 +157,7 @@ EOF
 
 - Issue processed: #<number> - <title>
 - Worktree location: `./.worktrees/<prefix>-<number>`
-- Spec folder: `.specs/<prefix>-<number>-<short-name>/`
+- Spec folder: `.claude/plans/<prefix>-<number>-<short-name>/`
 - Branch name: `<branch-name>`
 - Pull request created: <PR-URL>
 - Team workflow artifacts (in spec folder):
@@ -192,7 +192,7 @@ Confirm workflow completion with:
 
 - Issue number and title processed
 - Worktree path: `./.worktrees/<prefix>-<number>`
-- Spec folder: `.specs/<prefix>-<number>-<short-name>/`
+- Spec folder: `.claude/plans/<prefix>-<number>-<short-name>/`
 - Branch name: `<prefix>/<number>-<short-name>`
 - User stories generated: <N> stories with acceptance criteria
 - Team workflow completion status (all 5 phases)
