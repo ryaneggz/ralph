@@ -28,11 +28,11 @@ Authorization: Bearer $POST_BRIDGE_API_KEY
 
 ## Core Workflow
 
-Publishing a post follows four steps. Execute them in order - each step depends on the previous.
+Publishing a post follows four steps. Execute them in order — each step depends on the previous.
 
 ### Step 1: Retrieve Social Accounts
 
-Identify which account(s) to publish to. Capture the account `id` values for use in post creation.
+Identify which account(s) to publish to. Capture the account `id` values (these are **numbers**) for use in post creation.
 
 ```bash
 curl -s -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
@@ -48,15 +48,16 @@ curl -s -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
 
 ### Step 2: Generate Upload URL (media posts only)
 
-Skip this step for text-only posts.
+Skip this step for text-only posts. Also skip if using `media_urls` (publicly accessible URLs) instead of uploading files directly.
 
 Request a signed upload URL for each media file. Note the `upload_url` and `media_id` from the response.
 
 ```bash
+FILE_SIZE=$(stat -c%s "photo.jpg")
 UPLOAD_RESPONSE=$(curl -s -X POST \
   -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"filename": "photo.jpg", "mime_type": "image/jpeg"}' \
+  -d "{\"name\": \"photo.jpg\", \"mime_type\": \"image/jpeg\", \"size_bytes\": $FILE_SIZE}" \
   "https://api.post-bridge.com/v1/media/create-upload-url")
 
 UPLOAD_URL=$(echo "$UPLOAD_RESPONSE" | jq -r '.upload_url')
@@ -71,33 +72,49 @@ PUT the file directly to the signed URL. No authorization header is needed for t
 ```bash
 curl -s -X PUT \
   -H "Content-Type: image/jpeg" \
-  --data-binary @/path/to/photo.jpg \
+  --data-binary @photo.jpg \
   "$UPLOAD_URL"
 ```
 
-Upload promptly - the signed URL expires after a short window. Unused media auto-deletes after 24 hours.
+Upload promptly — the signed URL expires after a short window. Unused media auto-deletes after 24 hours.
 
 ### Step 4: Create Post
 
-Combine the account ID(s) and media ID(s) to create the post.
+Combine the account ID(s) and media ID(s) to create the post. Account IDs are **numbers**.
 
 ```bash
 curl -s -X POST \
   -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
   -H "Content-Type: application/json" \
   -d "{
-    \"social_account_ids\": [\"$ACCOUNT_ID\"],
+    \"social_accounts\": [$ACCOUNT_ID],
     \"caption\": \"Your caption here\",
-    \"media_ids\": [\"$MEDIA_ID\"]
+    \"media\": [\"$MEDIA_ID\"]
   }" \
   "https://api.post-bridge.com/v1/posts" | jq .
 ```
+
+**Alternative — use `media_urls` instead of uploading:**
+
+```bash
+curl -s -X POST \
+  -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"social_accounts\": [$ACCOUNT_ID],
+    \"caption\": \"Your caption here\",
+    \"media_urls\": [\"https://example.com/photo.jpg\"]
+  }" \
+  "https://api.post-bridge.com/v1/posts" | jq .
+```
+
+> `media_urls` accepts publicly accessible URLs. Ignored if `media` is also provided.
 
 ---
 
 ## Scheduling Options
 
-**Immediate posting**: Omit `scheduled_at` entirely.
+**Immediate posting**: Omit both `scheduled_at` and `use_queue`.
 
 **Specific time**:
 ```json
@@ -106,7 +123,76 @@ curl -s -X POST \
 
 **Auto-queue** (next available slot):
 ```json
-{ "use_queue": true, "timezone": "America/New_York" }
+{ "use_queue": { "timezone": "America/New_York" } }
+```
+
+> `scheduled_at` and `use_queue` cannot be used together.
+
+---
+
+## Draft Mode
+
+Save a post without publishing or scheduling:
+
+```json
+{ "is_draft": true }
+```
+
+---
+
+## Platform Configurations
+
+Override caption, media, or platform-specific settings per platform:
+
+```json
+{
+  "platform_configurations": {
+    "linkedin": { "caption": "LinkedIn-specific text", "media": ["med_1"] },
+    "instagram": {
+      "caption": "IG caption",
+      "media": ["med_2"],
+      "cover_image": "med_cover",
+      "video_cover_timestamp_ms": 5000,
+      "placement": "reels",
+      "is_trial_reel": false
+    },
+    "tiktok": {
+      "caption": "TikTok caption",
+      "media": ["med_3"],
+      "title": "Video title",
+      "draft": false,
+      "is_aigc": false
+    },
+    "youtube": { "caption": "Description", "media": ["med_4"], "title": "Video title" },
+    "pinterest": {
+      "caption": "Pin description",
+      "media": ["med_5"],
+      "board_ids": ["board_1"],
+      "link": "https://example.com",
+      "title": "Pin title"
+    },
+    "facebook": { "caption": "FB text", "media": ["med_6"], "placement": "reels" },
+    "twitter": { "caption": "Tweet text", "media": ["med_7"] },
+    "bluesky": { "caption": "Bluesky text", "media": ["med_8"] },
+    "threads": { "caption": "Threads text", "media": ["med_9"], "location": "reels" }
+  }
+}
+```
+
+---
+
+## Account Configurations
+
+Override caption/media per social account in multi-account posts:
+
+```json
+{
+  "account_configurations": {
+    "account_configurations": [
+      { "account_id": 42, "caption": "Custom text for this account", "media": ["med_1"] }
+    ]
+  }
+}
 ```
 
 ---
@@ -123,10 +209,11 @@ ACCOUNT=$(curl -s -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
   "https://api.post-bridge.com/v1/social-accounts?platform=instagram" | jq -r '.data[0].id')
 
 # Step 2 - get upload URL
+FILE_SIZE=$(stat -c%s "arrivals.jpg")
 UPLOAD_RESP=$(curl -s -X POST \
   -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"filename": "arrivals.jpg", "mime_type": "image/jpeg"}' \
+  -d "{\"name\": \"arrivals.jpg\", \"mime_type\": \"image/jpeg\", \"size_bytes\": $FILE_SIZE}" \
   "https://api.post-bridge.com/v1/media/create-upload-url")
 UPLOAD_URL=$(echo "$UPLOAD_RESP" | jq -r '.upload_url')
 MEDIA_ID=$(echo "$UPLOAD_RESP" | jq -r '.media_id')
@@ -140,14 +227,33 @@ curl -s -X POST \
   -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
   -H "Content-Type: application/json" \
   -d "{
-    \"social_account_ids\": [\"$ACCOUNT\"],
+    \"social_accounts\": [$ACCOUNT],
     \"caption\": \"New arrivals just dropped.\",
-    \"media_ids\": [\"$MEDIA_ID\"]
+    \"media\": [\"$MEDIA_ID\"]
   }" \
   "https://api.post-bridge.com/v1/posts" | jq .
 ```
 
-### Example 2: Schedule a Video Reel with Custom Cover
+### Example 2: Post with a Public Image URL (no upload needed)
+
+User: "Post this image to LinkedIn: https://example.com/banner.png"
+
+```bash
+ACCOUNT=$(curl -s -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
+  "https://api.post-bridge.com/v1/social-accounts?platform=linkedin" | jq -r '.data[0].id')
+
+curl -s -X POST \
+  -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"social_accounts\": [$ACCOUNT],
+    \"caption\": \"Check out our new banner!\",
+    \"media_urls\": [\"https://example.com/banner.png\"]
+  }" \
+  "https://api.post-bridge.com/v1/posts" | jq .
+```
+
+### Example 3: Schedule a Video Reel with Custom Cover
 
 User: "Schedule this reel for Friday at 9am EST with a custom thumbnail."
 
@@ -157,20 +263,22 @@ ACCOUNT=$(curl -s -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
   "https://api.post-bridge.com/v1/social-accounts?platform=instagram" | jq -r '.data[0].id')
 
 # Step 2+3 - upload reel video
+REEL_SIZE=$(stat -c%s "reel.mp4")
 REEL_RESP=$(curl -s -X POST \
   -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"filename": "reel.mp4", "mime_type": "video/mp4"}' \
+  -d "{\"name\": \"reel.mp4\", \"mime_type\": \"video/mp4\", \"size_bytes\": $REEL_SIZE}" \
   "https://api.post-bridge.com/v1/media/create-upload-url")
 REEL_URL=$(echo "$REEL_RESP" | jq -r '.upload_url')
 REEL_ID=$(echo "$REEL_RESP" | jq -r '.media_id')
 curl -s -X PUT -H "Content-Type: video/mp4" --data-binary @reel.mp4 "$REEL_URL"
 
 # Step 2+3 - upload cover image
+COVER_SIZE=$(stat -c%s "cover.jpg")
 COVER_RESP=$(curl -s -X POST \
   -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"filename": "cover.jpg", "mime_type": "image/jpeg"}' \
+  -d "{\"name\": \"cover.jpg\", \"mime_type\": \"image/jpeg\", \"size_bytes\": $COVER_SIZE}" \
   "https://api.post-bridge.com/v1/media/create-upload-url")
 COVER_URL=$(echo "$COVER_RESP" | jq -r '.upload_url')
 COVER_ID=$(echo "$COVER_RESP" | jq -r '.media_id')
@@ -181,20 +289,20 @@ curl -s -X POST \
   -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
   -H "Content-Type: application/json" \
   -d "{
-    \"social_account_ids\": [\"$ACCOUNT\"],
+    \"social_accounts\": [$ACCOUNT],
     \"caption\": \"Check this out!\",
-    \"media_ids\": [\"$REEL_ID\"],
+    \"media\": [\"$REEL_ID\"],
     \"scheduled_at\": \"2026-03-06T14:00:00Z\",
-    \"platform_config\": {
+    \"platform_configurations\": {
       \"instagram\": {
-        \"reel_cover_media_id\": \"$COVER_ID\"
+        \"cover_image\": \"$COVER_ID\"
       }
     }
   }" \
   "https://api.post-bridge.com/v1/posts" | jq .
 ```
 
-### Example 3: List and Update a Scheduled Post
+### Example 4: List and Update a Scheduled Post
 
 User: "Show me my scheduled posts and push the next one back by a day."
 
@@ -203,7 +311,7 @@ User: "Show me my scheduled posts and push the next one back by a day."
 curl -s -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
   "https://api.post-bridge.com/v1/posts?status=scheduled" | jq .
 
-# Update the scheduled time of a specific post
+# Update the scheduled time (always include scheduled_at to prevent immediate processing)
 curl -s -X PATCH \
   -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
   -H "Content-Type: application/json" \
@@ -211,22 +319,31 @@ curl -s -X PATCH \
   "https://api.post-bridge.com/v1/posts/post_def456" | jq .
 ```
 
-### Example 4: Check Analytics
+### Example 5: Check Analytics
 
 User: "Pull the latest analytics for my posts."
 
 ```bash
-# Sync first to get fresh data
+# Sync first to get fresh data (optionally filter by platform)
 curl -s -X POST -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
   "https://api.post-bridge.com/v1/analytics/sync" | jq .
 
-# Then retrieve
+# Retrieve analytics (with optional timeframe filter)
 curl -s -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
-  "https://api.post-bridge.com/v1/analytics" | jq .
+  "https://api.post-bridge.com/v1/analytics?timeframe=30d" | jq .
 
-# Post-level results
+# Check post-level publish results
 curl -s -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
   "https://api.post-bridge.com/v1/post-results" | jq .
+```
+
+### Example 6: Verify a Post Was Published Successfully
+
+```bash
+POST_ID="post_abc123"
+curl -s -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
+  "https://api.post-bridge.com/v1/post-results?post_id=$POST_ID" | jq .
+# Check .data[].success and .data[].platform_data.url for the live post link
 ```
 
 ---
@@ -234,9 +351,11 @@ curl -s -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
 ## Guidelines
 
 - Always verify `POST_BRIDGE_API_KEY` is set before making API calls.
-- Complete media uploads promptly after generating the signed URL - it expires quickly.
+- Complete media uploads promptly after generating the signed URL — it expires quickly.
 - Reference the full endpoint list and request/response shapes in `references/api-endpoints.md`.
 - Use `jq .` to pretty-print JSON responses; adapt field access (`.data[0].id`) to actual response shape.
 - When the user does not specify a time, ask whether they want immediate posting, a specific time, or queue scheduling.
-- For multi-platform posts, include all target account IDs in the `social_account_ids` array in a single post creation call.
+- For multi-platform posts, include all target account IDs in the `social_accounts` array in a single post creation call.
+- Use `media_urls` when the user provides public image/video URLs — avoids the upload flow.
+- After publishing, check post results via `GET /v1/post-results?post_id=X` to confirm success.
 - On 429 errors, wait before retrying. On 500 errors, retry once after a brief delay.

@@ -4,6 +4,8 @@ Base URL: `https://api.post-bridge.com`
 
 Authentication: `Authorization: Bearer $POST_BRIDGE_API_KEY`
 
+All list endpoints return a paginated envelope: `{ "data": [...], "total": N, "offset": N, "limit": N, "next": "url|null" }`
+
 ---
 
 ## Table of Contents
@@ -11,9 +13,10 @@ Authentication: `Authorization: Bearer $POST_BRIDGE_API_KEY`
 1. [Social Accounts](#social-accounts)
 2. [Media Management](#media-management)
 3. [Posts](#posts)
-4. [Analytics & Results](#analytics--results)
-5. [Error Codes](#error-codes)
-6. [Media Constraints](#media-constraints)
+4. [Post Results](#post-results)
+5. [Analytics](#analytics)
+6. [Error Codes](#error-codes)
+7. [Media Constraints](#media-constraints)
 
 ---
 
@@ -26,13 +29,22 @@ GET /v1/social-accounts
 ```
 
 Query parameters:
-- `platform` - Filter by platform (e.g. `instagram`, `twitter`, `tiktok`)
-- `username` - Filter by username (partial match)
+- `offset` (number, default: 0) — items to skip
+- `limit` (number, default: 10) — items to return
+- `platform` (string[]) — filter by platform (OR logic). Enum: bluesky, facebook, instagram, linkedin, pinterest, threads, tiktok, twitter, youtube
+- `username` (string[]) — filter by username (OR logic)
+
+Response item shape:
+```json
+{ "id": 42, "platform": "linkedin", "username": "ryan-eggleston" }
+```
+
+> **Note:** `id` is a **number**, not a string.
 
 Example:
 ```bash
 curl -s -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
-  "https://api.post-bridge.com/v1/social-accounts?platform=instagram"
+  "https://api.post-bridge.com/v1/social-accounts?platform=linkedin" | jq .
 ```
 
 ### Get Social Account
@@ -41,11 +53,8 @@ curl -s -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
 GET /v1/social-accounts/{id}
 ```
 
-Example:
-```bash
-curl -s -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
-  "https://api.post-bridge.com/v1/social-accounts/acct_abc123"
-```
+Path parameters:
+- `id` (number, required)
 
 ---
 
@@ -60,31 +69,35 @@ POST /v1/media/create-upload-url
 Request body:
 ```json
 {
-  "filename": "video.mp4",
-  "mime_type": "video/mp4"
+  "mime_type": "image/jpeg",
+  "size_bytes": 204800,
+  "name": "photo.jpg"
 }
 ```
 
-Response includes:
-- `upload_url` - Signed URL to PUT the file to
-- `media_id` - ID to reference in post creation
+Fields:
+- `mime_type` (required) — `image/png`, `image/jpeg`, `video/mp4`, or `video/quicktime`
+- `size_bytes` (required, minimum: 1) — file size in bytes
+- `name` (required) — filename
 
-Example:
-```bash
-curl -s -X POST \
-  -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"filename": "photo.jpg", "mime_type": "image/jpeg"}' \
-  "https://api.post-bridge.com/v1/media/create-upload-url"
+Response:
+```json
+{
+  "media_id": "med_abc123",
+  "upload_url": "https://storage.example.com/signed-url...",
+  "name": "photo.jpg"
+}
 ```
 
-Upload file to the signed URL (no auth header needed):
+Upload the file with a PUT to the `upload_url` (no auth header needed):
 ```bash
 curl -s -X PUT \
   -H "Content-Type: image/jpeg" \
   --data-binary @photo.jpg \
   "$UPLOAD_URL"
 ```
+
+Upload promptly — the signed URL expires after a short window. Unused media auto-deletes after 24 hours.
 
 ### List Media
 
@@ -93,14 +106,10 @@ GET /v1/media
 ```
 
 Query parameters:
-- `post_id` - Filter by associated post
-- `type` - Filter by MIME type
-
-Example:
-```bash
-curl -s -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
-  "https://api.post-bridge.com/v1/media?type=video/mp4"
-```
+- `offset` (number, default: 0)
+- `limit` (number, default: 10)
+- `post_id` (string[]) — filter by post IDs (OR logic)
+- `type` (string[]) — filter by type: `image` or `video` (OR logic)
 
 ### Get Media
 
@@ -114,12 +123,7 @@ GET /v1/media/{id}
 DELETE /v1/media/{id}
 ```
 
-Example:
-```bash
-curl -s -X DELETE \
-  -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
-  "https://api.post-bridge.com/v1/media/media_xyz789"
-```
+Response: `{ "success": true }`
 
 ---
 
@@ -134,54 +138,99 @@ POST /v1/posts
 Request body:
 ```json
 {
-  "social_account_ids": ["acct_abc123"],
   "caption": "Your post caption here",
-  "media_ids": ["media_xyz789"],
+  "social_accounts": [42],
+  "media": ["med_abc123"],
+  "media_urls": ["https://example.com/photo.jpg"],
   "scheduled_at": "2026-03-10T14:00:00Z",
-  "use_queue": false,
-  "platform_config": {}
+  "use_queue": { "timezone": "America/New_York" },
+  "is_draft": false,
+  "processing_enabled": true,
+  "platform_configurations": {},
+  "account_configurations": {}
 }
 ```
 
 Fields:
-- `social_account_ids` (required) - Array of target account IDs
-- `caption` (required) - Post caption/text
-- `media_ids` (optional) - Array of uploaded media IDs
-- `scheduled_at` (optional) - ISO 8601 datetime; omit for immediate posting
-- `use_queue` (optional) - Auto-schedule to next available slot
-- `platform_config` (optional) - Platform-specific overrides (see below)
+- `caption` (required) — post text
+- `social_accounts` (required) — array of account IDs (**numbers**)
+- `media` (optional) — array of uploaded media IDs
+- `media_urls` (optional) — array of publicly accessible URLs; ignored if `media` is provided
+- `scheduled_at` (optional) — ISO 8601 datetime; omit for immediate posting; **cannot combine with `use_queue`**
+- `use_queue` (optional) — object `{ "timezone": "IANA_timezone" }` for auto-queue; **cannot combine with `scheduled_at`**
+- `is_draft` (optional) — save as draft without publishing
+- `processing_enabled` (optional, default: true)
+- `platform_configurations` (optional) — per-platform overrides (see below)
+- `account_configurations` (optional) — per-account overrides (see below)
 
-Instagram Reels cover image via `platform_config`:
+#### Platform Configurations
+
+Per-platform caption, media, and settings overrides:
+
 ```json
 {
-  "platform_config": {
+  "platform_configurations": {
+    "linkedin": { "caption": "LinkedIn-specific text", "media": ["med_1"] },
     "instagram": {
-      "reel_cover_media_id": "media_cover456"
-    }
+      "caption": "IG caption",
+      "media": ["med_2"],
+      "cover_image": "med_cover",
+      "video_cover_timestamp_ms": 5000,
+      "placement": "reels",
+      "is_trial_reel": false,
+      "trial_graduation": "MANUAL"
+    },
+    "tiktok": {
+      "caption": "TikTok caption",
+      "media": ["med_3"],
+      "title": "Video title",
+      "video_cover_timestamp_ms": 3000,
+      "draft": false,
+      "is_aigc": false
+    },
+    "youtube": { "caption": "Description", "media": ["med_4"], "title": "Video title" },
+    "pinterest": {
+      "caption": "Pin description",
+      "media": ["med_5"],
+      "board_ids": ["board_1"],
+      "link": "https://example.com",
+      "title": "Pin title",
+      "video_cover_timestamp_ms": 2000
+    },
+    "facebook": { "caption": "FB text", "media": ["med_6"], "placement": "reels" },
+    "twitter": { "caption": "Tweet text", "media": ["med_7"] },
+    "bluesky": { "caption": "Bluesky text", "media": ["med_8"] },
+    "threads": { "caption": "Threads text", "media": ["med_9"], "location": "reels" }
   }
 }
 ```
 
-Queue with timezone:
+#### Account Configurations
+
+Per-account caption/media overrides for multi-account posts:
+
 ```json
 {
-  "use_queue": true,
-  "timezone": "America/New_York"
+  "account_configurations": {
+    "account_configurations": [
+      { "account_id": 42, "caption": "Custom caption for this account", "media": ["med_1"] }
+    ]
+  }
 }
 ```
 
-Example:
-```bash
-curl -s -X POST \
-  -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "social_account_ids": ["acct_abc123"],
-    "caption": "Check out our latest update!",
-    "media_ids": ["media_xyz789"],
-    "scheduled_at": "2026-03-10T14:00:00Z"
-  }' \
-  "https://api.post-bridge.com/v1/posts"
+#### Scheduling Examples
+
+**Immediate** — omit both `scheduled_at` and `use_queue`.
+
+**Specific time**:
+```json
+{ "scheduled_at": "2026-03-10T14:00:00Z" }
+```
+
+**Auto-queue**:
+```json
+{ "use_queue": { "timezone": "America/New_York" } }
 ```
 
 ### List Posts
@@ -191,8 +240,10 @@ GET /v1/posts
 ```
 
 Query parameters:
-- `platform` - Filter by platform
-- `status` - Filter by status (e.g. `draft`, `scheduled`, `published`, `failed`)
+- `offset` (number, default: 0)
+- `limit` (number, default: 10)
+- `platform` (string[]) — filter by platform (OR logic)
+- `status` (string[]) — filter by status (OR logic). Enum: `posted`, `scheduled`, `processing`
 
 ### Get Post
 
@@ -206,16 +257,9 @@ GET /v1/posts/{id}
 PATCH /v1/posts/{id}
 ```
 
-Request body: Any subset of post creation fields.
+Request body: same shape as Create Post, all fields optional.
 
-Example (reschedule):
-```bash
-curl -s -X PATCH \
-  -H "Authorization: Bearer $POST_BRIDGE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"scheduled_at": "2026-03-11T10:00:00Z"}' \
-  "https://api.post-bridge.com/v1/posts/post_def456"
-```
+> **Important:** Always pass `scheduled_at` when updating scheduled posts to prevent immediate processing.
 
 ### Delete Post
 
@@ -223,9 +267,49 @@ curl -s -X PATCH \
 DELETE /v1/posts/{id}
 ```
 
+Response: `{ "success": true }`
+
 ---
 
-## Analytics & Results
+## Post Results
+
+### List Post Results
+
+```
+GET /v1/post-results
+```
+
+Query parameters:
+- `offset` (number, default: 0)
+- `limit` (number, default: 10)
+- `post_id` (string[]) — filter by post IDs (OR logic)
+- `platform` (string[]) — filter by platform (OR logic)
+
+### Get Post Result
+
+```
+GET /v1/post-results/{id}
+```
+
+Response:
+```json
+{
+  "id": "pr_abc123",
+  "post_id": "post_def456",
+  "success": true,
+  "social_account_id": 42,
+  "error": null,
+  "platform_data": {
+    "id": "li_post_789",
+    "url": "https://linkedin.com/feed/update/...",
+    "username": "ryan-eggleston"
+  }
+}
+```
+
+---
+
+## Analytics
 
 ### Get Analytics
 
@@ -233,21 +317,27 @@ DELETE /v1/posts/{id}
 GET /v1/analytics
 ```
 
+Query parameters:
+- `offset` (number, default: 0)
+- `limit` (number, default: 10)
+- `platform` (string) — filter by platform
+- `post_result_id` (string[]) — filter by post result IDs (OR logic)
+- `timeframe` (string, default: "all") — `7d`, `30d`, `90d`, or `all`
+
 ### Sync Analytics
 
 ```
 POST /v1/analytics/sync
 ```
 
-Triggers a fresh pull of analytics data from connected platforms.
+Query parameters:
+- `platform` (string, optional) — sync specific platform; omit for all. Enum: tiktok, youtube, instagram
 
-### Get Post Results
+### Get Analytics Record
 
 ```
-GET /v1/post-results
+GET /v1/analytics/{id}
 ```
-
-Returns publication outcomes (reach, impressions, engagement) per post.
 
 ---
 
@@ -255,10 +345,10 @@ Returns publication outcomes (reach, impressions, engagement) per post.
 
 | Code | Meaning |
 |------|---------|
-| 400  | Invalid request - check body/params |
+| 400  | Invalid request — check body/params |
 | 404  | Resource not found |
-| 429  | Rate limit exceeded - back off and retry |
-| 500  | Server error - retry after delay |
+| 429  | Rate limit exceeded — back off and retry |
+| 500  | Server error — retry after delay |
 
 ---
 
@@ -267,5 +357,5 @@ Returns publication outcomes (reach, impressions, engagement) per post.
 | Property | Value |
 |----------|-------|
 | Supported types | `image/png`, `image/jpeg`, `video/mp4`, `video/quicktime` |
-| Upload expiry | Short window after URL generation - upload promptly |
+| Upload expiry | Short window after URL generation — upload promptly |
 | Auto-deletion | 24 hours after upload if not attached to a post |
