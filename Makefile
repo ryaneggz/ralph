@@ -13,4 +13,4 @@ ralph:
 
 # Archive current prd.json and progress.txt into dated directory
 archive:
-	claude --dangerously-skip-permissions -p "Archive the latest prd.json & progress.json into \`./.ralph/archive/YYYY-MM-DD/prd.json\` and \`./.ralph/archive/YYYY-MM-DD/progress.json\` respectively. Create the directory if it doesn't exist."
+	claude --dangerously-skip-permissions -p "Archive the latest prd.json & progress.txt into \`./.ralph/archive/YYYY-MM-DD/prd.json\` and \`./.ralph/archive/YYYY-MM-DD/progress.json\` respectively. Create the directory if it doesn't exist."
