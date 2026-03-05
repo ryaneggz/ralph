@@ -189,7 +189,7 @@ main() {
   local accounts
   accounts=$(jq -c '.accounts[] | select(.enabled == true)' "$CONFIG_FILE")
   local topic_strategy
-  topic_strategy=$(jq -r '.topicStrategy' "$CONFIG_FILE")
+  topic_strategy=$(jq -r '.contentParameters.topicStrategy' "$CONFIG_FILE")
 
   if [[ -z "$accounts" ]]; then
     log "No enabled accounts found in config. Nothing to do."

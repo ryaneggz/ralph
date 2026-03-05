@@ -1,4 +1,16 @@
 {
+  "cronSchedule": {
+    "description": "Cron fires at 6:00 PM America/Denver daily",
+    "cronExpression": "0 18 * * *",
+    "timezone": "America/Denver",
+    "dstHandling": "Use CRON_TZ=America/Denver so the system adjusts automatically for DST. Fallback: dual UTC entries at 00:00 and 01:00 with idempotency lock."
+  },
+  "defaults": {
+    "schedulingMode": "at",
+    "scheduleHour": 9,
+    "scheduleMinute": 0,
+    "timezone": "America/Denver"
+  },
   "accounts": [
     {
       "slug": "ryan",
@@ -28,6 +40,10 @@
       "timezone": "America/Denver"
     }
   ],
-  "topicStrategy": "Generate a trending, relevant LinkedIn post topic based on the account's niche and recent industry trends.",
+  "contentParameters": {
+    "topicStrategy": "Generate a trending, relevant LinkedIn post topic based on the account's niche and recent industry trends.",
+    "contentType": "text",
+    "platform": "linkedin"
+  },
   "logDir": "logs"
 }

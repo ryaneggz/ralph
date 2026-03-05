@@ -1,0 +1,21 @@
+# LinkedIn Cron Scheduler — crontab example
+# Runs linkedin-cron.sh at 6:00 PM America/Denver (MST/MDT) every day.
+#
+# Option 1: Use CRON_TZ (recommended — supported by systemd timers & most modern cron)
+# This automatically adjusts for DST (MST in winter, MDT in summer).
+CRON_TZ=America/Denver
+0 18 * * * /path/to/scripts/linkedin-cron.sh >> /path/to/logs/linkedin-cron-crontab.log 2>&1
+
+# Option 2: If CRON_TZ is not supported (legacy vixie cron), use two UTC entries
+# to cover both MST (UTC-7) and MDT (UTC-6) and rely on the script's
+# idempotency lock to skip the redundant run.
+#
+# 6:00 PM MST = 01:00 UTC (next day) — active Nov–Mar
+# 6:00 PM MDT = 00:00 UTC (next day) — active Mar–Nov
+# 0 0 * * * /path/to/scripts/linkedin-cron.sh >> /path/to/logs/linkedin-cron-crontab.log 2>&1
+# 0 1 * * * /path/to/scripts/linkedin-cron.sh >> /path/to/logs/linkedin-cron-crontab.log 2>&1
+
+# Option 3: systemd timer (see docs/linkedin-cron-setup.md for full unit files)
+# [Timer]
+# OnCalendar=*-*-* 18:00:00 America/Denver
+# Persistent=true
