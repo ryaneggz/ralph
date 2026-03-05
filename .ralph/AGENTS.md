@@ -8,20 +8,19 @@ Ralph is an autonomous AI agent loop that runs AI coding tools (Amp or Claude Co
 
 ```bash
 # Run Ralph loop with Claude Code
-./ralph.sh --tool claude [max_iterations]
+.ralph/ralph.sh --tool claude [max_iterations]
 
 # Run Ralph loop with Amp (default)
-./ralph.sh [max_iterations]
+.ralph/ralph.sh [max_iterations]
 ```
 
 ## Key Files
 
--   `ralph.sh` — Ralph loop shell script (supports `--tool amp` or `--tool claude`)
--   `prompt.md` — Amp agent instructions
--   `CLAUDE.md` — Claude Code agent instructions
--   `.ralph/prd.json` — User stories for autonomous execution
--   `prd.json.example` — Example PRD format reference
--   `archives/` — Folder old tasks are archived
+-   `.ralph/ralph.sh` — Ralph loop shell script (supports `--tool amp` or `--tool claude`)
+-   `.ralph/prompt.md` — Amp agent instructions
+-   `.ralph/.ralph/prd.json` — User stories for autonomous execution
+-   `.ralph/prd.json.example` — Example PRD format reference
+-   `.ralph/archive/` — Folder old tasks are archived
 
 ## Patterns
 

@@ -69,6 +69,7 @@ make ralph
 ```
 
 Ralph will now:
+
 - Read `.ralph/prd.json`
 - Check out or create the branch specified in `branchName`
 - Iterate through incomplete user stories
@@ -98,17 +99,17 @@ Each iteration is logged to `.ralph/progress.txt` so you can trace exactly what 
 
 ## Key Files
 
-| File | Purpose |
-|------|---------|
-| `ralph.sh` | Main orchestration script — the autonomous loop |
-| `prompt.md` | System prompt sent to AI on every iteration |
-| `CLAUDE.md` | Project context guide (replace with your project's CLAUDE.md) |
-| `AGENTS.md` | Agent-specific instructions (replace with your project's AGENTS.md) |
-| `prd.json` | Product Requirements Document — the source of truth |
-| `prd.json.example` | Template showing proper PRD structure |
-| `progress.txt` | Append-only log of each iteration's result |
-| `archives/` | Historical PRDs and progress logs, organized by date |
-| `LICENSE` | MIT License |
+| File               | Purpose                                                             |
+| ------------------ | ------------------------------------------------------------------- |
+| `ralph.sh`         | Main orchestration script — the autonomous loop                     |
+| `prompt.md`        | System prompt sent to AI on every iteration                         |
+| `CLAUDE.md`        | Project context guide (replace with your project's CLAUDE.md)       |
+| `AGENTS.md`        | Agent-specific instructions (replace with your project's AGENTS.md) |
+| `prd.json`         | Product Requirements Document — the source of truth                 |
+| `prd.json.example` | Template showing proper PRD structure                               |
+| `progress.txt`     | Append-only log of each iteration's result                          |
+| `archives/`        | Historical PRDs and progress logs, organized by date                |
+| `LICENSE`          | MIT License                                                         |
 
 ---
 
@@ -118,38 +119,38 @@ The `prd.json` file defines what Ralph will build. Here's the structure:
 
 ```json
 {
-  "project": "MyApp",
-  "branchName": "ralph/task-priority",
-  "description": "Task Priority System - Add priority levels to tasks",
-  "userStories": [
-    {
-      "id": "US-001",
-      "title": "Add priority field to database",
-      "description": "As a developer, I need to store task priority so it persists across sessions.",
-      "acceptanceCriteria": [
-        "Add priority column to tasks table: 'high' | 'medium' | 'low' (default 'medium')",
-        "Generate and run migration successfully",
-        "Typecheck passes"
-      ],
-      "priority": 1,
-      "passes": false,
-      "notes": ""
-    },
-    {
-      "id": "US-002",
-      "title": "Display priority indicator on task cards",
-      "description": "As a user, I want to see task priority at a glance.",
-      "acceptanceCriteria": [
-        "Each task card shows colored priority badge (red=high, yellow=medium, gray=low)",
-        "Priority visible without hovering or clicking",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 2,
-      "passes": false,
-      "notes": ""
-    }
-  ]
+    "project": "MyApp",
+    "branchName": "ralph/task-priority",
+    "description": "Task Priority System - Add priority levels to tasks",
+    "userStories": [
+        {
+            "id": "US-001",
+            "title": "Add priority field to database",
+            "description": "As a developer, I need to store task priority so it persists across sessions.",
+            "acceptanceCriteria": [
+                "Add priority column to tasks table: 'high' | 'medium' | 'low' (default 'medium')",
+                "Generate and run migration successfully",
+                "Typecheck passes"
+            ],
+            "priority": 1,
+            "passes": false,
+            "notes": ""
+        },
+        {
+            "id": "US-002",
+            "title": "Display priority indicator on task cards",
+            "description": "As a user, I want to see task priority at a glance.",
+            "acceptanceCriteria": [
+                "Each task card shows colored priority badge (red=high, yellow=medium, gray=low)",
+                "Priority visible without hovering or clicking",
+                "Typecheck passes",
+                "Verify in browser using agent-browser skill"
+            ],
+            "priority": 2,
+            "passes": false,
+            "notes": ""
+        }
+    ]
 }
 ```
 
@@ -178,17 +179,17 @@ The `prd.json` file defines what Ralph will build. Here's the structure:
 
 ```json
 {
-  "id": "US-003",
-  "title": "Add loading spinner to submit button",
-  "description": "As a user, I want visual feedback when submitting a form.",
-  "acceptanceCriteria": [
-    "Button shows spinner icon during async submit",
-    "Button is disabled while loading",
-    "Typecheck passes",
-    "Verify in browser using dev-browser skill"
-  ],
-  "priority": 3,
-  "passes": false
+    "id": "US-003",
+    "title": "Add loading spinner to submit button",
+    "description": "As a user, I want visual feedback when submitting a form.",
+    "acceptanceCriteria": [
+        "Button shows spinner icon during async submit",
+        "Button is disabled while loading",
+        "Typecheck passes",
+        "Verify in browser using agent-browser skill"
+    ],
+    "priority": 3,
+    "passes": false
 }
 ```
 
@@ -198,19 +199,19 @@ The `prd.json` file defines what Ralph will build. Here's the structure:
 
 ```json
 {
-  "id": "US-999",
-  "title": "Build complete authentication system",
-  "description": "As a user, I want to sign up, log in, reset password, and manage sessions.",
-  "acceptanceCriteria": [
-    "User registration with email validation",
-    "Login with JWT tokens",
-    "Password reset flow with email",
-    "Session management and refresh",
-    "Admin user roles",
-    "OAuth integration"
-  ],
-  "priority": 1,
-  "passes": false
+    "id": "US-999",
+    "title": "Build complete authentication system",
+    "description": "As a user, I want to sign up, log in, reset password, and manage sessions.",
+    "acceptanceCriteria": [
+        "User registration with email validation",
+        "Login with JWT tokens",
+        "Password reset flow with email",
+        "Session management and refresh",
+        "Admin user roles",
+        "OAuth integration"
+    ],
+    "priority": 1,
+    "passes": false
 }
 ```
 
@@ -219,7 +220,7 @@ The `prd.json` file defines what Ralph will build. Here's the structure:
 ### Tips for Sizing
 
 1. **One file or component per story** when possible
-2. **UI stories should be visually verifiable** — include `dev-browser` skill in criteria
+2. **UI stories should be visually verifiable** — include `agent-browser` skill in criteria
 3. **Backend stories should be testable** — include test/typecheck requirements
 4. **Dependencies should be explicit** — order stories by priority so prerequisites come first
 5. **Acceptance criteria should be concrete** — avoid "should be good" or "works well"
@@ -280,6 +281,7 @@ cat .ralph/progress.txt
 ```
 
 Shows every iteration Ralph completed, including:
+
 - Which story was attempted
 - Whether it passed/failed
 - Timestamp of completion
@@ -313,12 +315,14 @@ If there's a syntax error, jq will report the line number.
 The `AGENTS.md` file lives at `.ralph/AGENTS.md` by default, but Ralph will use your project's root-level `AGENTS.md` if it exists.
 
 **Why AGENTS.md matters**:
+
 - Documents **how** your project's AI agents should behave
 - Contains project-specific conventions (file naming, commit style, etc.)
 - Gets updated as your project evolves
 - Ralph reads this on every iteration
 
 **When to update AGENTS.md**:
+
 - You adopt a new testing framework
 - You change your file structure conventions
 - You add new scripts/commands agents should know about
@@ -390,19 +394,20 @@ For UI-related stories, **always include browser verification** in acceptance cr
 
 ```json
 {
-  "id": "US-007",
-  "title": "Add dark mode toggle to navbar",
-  "acceptanceCriteria": [
-    "Toggle button visible in navbar",
-    "Clicking toggle switches theme",
-    "Theme persists across page reloads",
-    "Typecheck passes",
-    "Verify in browser using dev-browser skill"
-  ]
+    "id": "US-007",
+    "title": "Add dark mode toggle to navbar",
+    "acceptanceCriteria": [
+        "Toggle button visible in navbar",
+        "Clicking toggle switches theme",
+        "Theme persists across page reloads",
+        "Typecheck passes",
+        "Verify in browser using agent-browser skill"
+    ]
 }
 ```
 
-The `dev-browser` skill allows Claude Code to:
+The `agent-browser` skill allows Claude Code to:
+
 - Launch a browser
 - Navigate to localhost
 - Take screenshots
@@ -419,10 +424,12 @@ Ralph stops iterating when it finds the **COMPLETE promise** in its response.
 ### How It Works
 
 After every story, the AI tool evaluates:
+
 1. Are all user stories marked `passes: true`?
 2. Did all acceptance criteria genuinely pass?
 
 If YES → AI responds with:
+
 ```
 COMPLETE: All user stories in prd.json have been implemented and verified.
 ```
@@ -432,6 +439,7 @@ Ralph detects this string and gracefully exits, logging the completion to `progr
 ### Manual Stop
 
 You can also manually stop Ralph:
+
 - Press `Ctrl+C` during iteration
 - Set a low `MAX_ITERATIONS` value
 - Update PRD to mark stories as passing
@@ -489,6 +497,7 @@ Current branch: {branchName}
 Current story: {currentStory}
 
 Guidelines:
+
 - Always run typecheck before marking story complete
 - Write tests for all business logic
 - Use the project's existing patterns (check AGENTS.md)
@@ -549,25 +558,32 @@ Ralph is designed to work seamlessly with Claude Code:
 ## Best Practices
 
 ### 1. Start Small
+
 Begin with 3-5 stories, verify Ralph completes them, then scale up.
 
 ### 2. Incremental Complexity
+
 Order stories so each builds on the previous. Don't jump from "create database" to "deploy to production".
 
 ### 3. Frequent Commits
+
 Ralph commits after every story. This creates a detailed Git history you can review and revert if needed.
 
 ### 4. Review Progress Regularly
+
 Check `progress.txt` and `git log` after each Ralph session. Catch issues early.
 
 ### 5. Use Branches
+
 Always use `ralph/*` branch naming convention. Never run Ralph directly on `main`/`master`.
 
 ### 6. Typecheck Everything
+
 Include "Typecheck passes" in every single story's acceptance criteria.
 
 ### 7. Test UI Stories
-Include "Verify in browser using dev-browser skill" for all UI work.
+
+Include "Verify in browser using agent-browser skill" for all UI work.
 
 ---
 
@@ -588,6 +604,7 @@ Include "Verify in browser using dev-browser skill" for all UI work.
 ### Ralph Stops Early
 
 **Solution**: Check `progress.txt` for error messages. Common causes:
+
 - Git merge conflicts
 - Missing dependencies
 - Invalid acceptance criteria
@@ -595,6 +612,7 @@ Include "Verify in browser using dev-browser skill" for all UI work.
 ### Branch Already Exists Error
 
 **Solution**: Ralph tries to create the branch specified in `prd.json`. If it exists, either:
+
 - Delete the branch: `git branch -D ralph/feature-name`
 - Or change `branchName` in `prd.json` to something unique
 
