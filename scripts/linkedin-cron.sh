@@ -8,6 +8,23 @@
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
+# Trap: catch unexpected errors and log them with context
+# ---------------------------------------------------------------------------
+trap_handler() {
+  local exit_code=$?
+  local line_no=${1:-unknown}
+  if [[ $exit_code -ne 0 ]]; then
+    local msg="[$(date '+%Y-%m-%d %H:%M:%S')] FATAL: Unexpected error on line $line_no (exit code: $exit_code)"
+    # Log to file if LOG_FILE is set and writable
+    if [[ -n "${LOG_FILE:-}" ]]; then
+      echo "$msg" >> "$LOG_FILE" 2>/dev/null || true
+    fi
+    echo "$msg" >&2
+  fi
+}
+trap 'trap_handler ${LINENO}' ERR
+
+# ---------------------------------------------------------------------------
 # Defaults
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -101,6 +118,22 @@ check_prerequisites() {
     log_error "Config file not found: $CONFIG_FILE"
     exit 1
   fi
+
+  # Validate config JSON is well-formed and has required fields
+  if ! jq empty "$CONFIG_FILE" 2>/dev/null; then
+    log_error "Config file is not valid JSON: $CONFIG_FILE"
+    exit 1
+  fi
+
+  if [[ "$(jq 'has("accounts")' "$CONFIG_FILE")" != "true" ]]; then
+    log_error "Config file missing required 'accounts' field: $CONFIG_FILE"
+    exit 1
+  fi
+
+  if [[ "$(jq 'has("contentParameters")' "$CONFIG_FILE")" != "true" ]]; then
+    log_error "Config file missing required 'contentParameters' field: $CONFIG_FILE"
+    exit 1
+  fi
 }
 
 # ---------------------------------------------------------------------------
@@ -162,11 +195,16 @@ process_account() {
   local exit_code=0
   output=$(claude --dangerously-skip-permissions --agent linkedin-scheduler -p "$prompt" 2>&1) || exit_code=$?
 
-  # Log the output
+  # Log the full output
+  echo "--- claude output for $slug ---" >> "$LOG_FILE"
   echo "$output" >> "$LOG_FILE"
+  echo "--- end claude output ---" >> "$LOG_FILE"
 
   if [[ $exit_code -ne 0 ]]; then
     log_error "linkedin-scheduler failed for $slug (exit code: $exit_code)"
+    log_error "  Account: $name | Slug: $slug | Prompt: $prompt"
+    # Output last 5 lines of agent output to stderr for cron email visibility
+    echo "$output" | tail -5 >&2
     return 1
   fi
 
