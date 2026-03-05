@@ -9,8 +9,8 @@ params:
 
 # Run the Ralph autonomous agent loop using Claude Code
 ralph:
-	./ralph.sh --tool claude $(MAX_ITERATIONS)
+	.ralph/ralph.sh --tool claude $(MAX_ITERATIONS)
 
 # Archive current prd.json and progress.txt into dated directory
 archive:
-	claude --dangerously-skip-permissions -p "Archive the latest prd.json & progress.json into \`./.ralph/archives/YYYY-MM-DD/prd.json\` and \`./.ralph/archives/YYYY-MM-DD/progress.json\` respectively. Create the directory if it doesn't exist."
+	claude --dangerously-skip-permissions -p "Archive the latest prd.json & progress.json into \`./.ralph/archive/YYYY-MM-DD/prd.json\` and \`./.ralph/archive/YYYY-MM-DD/progress.json\` respectively. Create the directory if it doesn't exist."

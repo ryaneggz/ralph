@@ -6,7 +6,8 @@ progress.txt
 .ralph/.last-branch
 
 # Archives
-.ralph/archives/
+!.ralph/archive/.gitkeep
+.ralph/archive/
 
 # OS files
 .DS_Store
