@@ -1,0 +1,33 @@
+{
+  "accounts": [
+    {
+      "slug": "ryan",
+      "name": "Ryan Eggleston",
+      "enabled": true,
+      "schedulingMode": "at",
+      "defaultScheduleHour": 9,
+      "defaultScheduleMinute": 0,
+      "timezone": "America/Denver"
+    },
+    {
+      "slug": "ruska",
+      "name": "Ruska AI",
+      "enabled": false,
+      "schedulingMode": "at",
+      "defaultScheduleHour": 10,
+      "defaultScheduleMinute": 0,
+      "timezone": "America/Denver"
+    },
+    {
+      "slug": "prompteng",
+      "name": "Prompt Engineers AI",
+      "enabled": false,
+      "schedulingMode": "at",
+      "defaultScheduleHour": 11,
+      "defaultScheduleMinute": 0,
+      "timezone": "America/Denver"
+    }
+  ],
+  "topicStrategy": "Generate a trending, relevant LinkedIn post topic based on the account's niche and recent industry trends.",
+  "logDir": "logs"
+}
