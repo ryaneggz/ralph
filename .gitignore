@@ -15,6 +15,12 @@ progress.txt
 # Claude
 **/.env*
 
+# Logs
+logs/*.log
+
+# Cron lock
+/tmp/linkedin-cron.lock
+
 # Defensive patterns
 **/node_modules/
 **/.next/
